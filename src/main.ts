@@ -1,10 +1,58 @@
-import { Reference } from "./comment";
-var x = Reference.parse("#0.5");
-console.log(x);
-
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import { GitHub } from "@actions/github/lib/utils";
 import { env } from "process";
+import { LandAfterCommand } from "./comment";
+
+async function checkPullRequest(
+  client: InstanceType<typeof GitHub>,
+  pullRequestNumber: number
+) {
+  var prInfo = {
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+
+    // For pulls API
+    pull_number: pullRequestNumber,
+
+    // For comments API
+    issue_number: pullRequestNumber,
+    per_page: 100,
+  };
+
+  var pr = await client.rest.pulls.get(prInfo);
+  if (pr.data.state !== "open") {
+    return;
+  }
+
+  var comments = await client.rest.issues.listComments(prInfo);
+
+  // Now get the LAST comment on the PR that contains a command
+  var cmd = null;
+  comments.data.reverse().find((comment) => {
+    try {
+      var _cmd = LandAfterCommand.parse(
+        comment.body || comment.body_text || ""
+      );
+      if (_cmd.dependencies.length === 0) {
+        return false;
+      }
+
+      cmd = _cmd;
+      return true;
+    } catch (e) {
+      console.log("Error while parsing comment at " + comment.url + ": " + e);
+      return false;
+    }
+  });
+
+  if (cmd == null) {
+    console.log("pull request doesn't have a commands associated with it");
+    return;
+  }
+
+  // Now we can check if the PR command is satisfied
+}
 
 async function run(): Promise<void> {
   try {
@@ -24,27 +72,7 @@ async function run(): Promise<void> {
         // - check if the current pull request checks have all passed, it's not a draft
         //   idea: add "waiting-for-other" label
 
-        var prInfo = {
-          owner: github.context.repo.owner,
-          repo: github.context.repo.repo,
-
-          // For pulls API
-          pull_number: github.context.issue.number,
-
-          // For comments API
-          issue_number: github.context.issue.number,
-          per_page: 100,
-        };
-
-        var pr = await client.rest.pulls.get(prInfo);
-        core.group("pull request info", async () => {
-          console.log(JSON.stringify(pr));
-        });
-
-        var comments = await client.rest.issues.listComments(prInfo);
-        core.group("pull request comments", async () => {
-          console.log(JSON.stringify(comments));
-        });
+        await checkPullRequest(client, github.context.issue.number);
 
         break;
       case "workflow_dispatch":

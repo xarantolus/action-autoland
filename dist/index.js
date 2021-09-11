@@ -163,12 +163,49 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const comment_1 = __nccwpck_require__(667);
-var x = comment_1.Reference.parse("#0.5");
-console.log(x);
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
 const process_1 = __nccwpck_require__(765);
+const comment_1 = __nccwpck_require__(667);
+function checkPullRequest(client, pullRequestNumber) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var prInfo = {
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            // For pulls API
+            pull_number: pullRequestNumber,
+            // For comments API
+            issue_number: pullRequestNumber,
+            per_page: 100,
+        };
+        var pr = yield client.rest.pulls.get(prInfo);
+        if (pr.data.state !== "open") {
+            return;
+        }
+        var comments = yield client.rest.issues.listComments(prInfo);
+        // Now get the LAST comment on the PR that contains a command
+        var cmd = null;
+        comments.data.reverse().find((comment) => {
+            try {
+                var _cmd = comment_1.LandAfterCommand.parse(comment.body || comment.body_text || "");
+                if (_cmd.dependencies.length === 0) {
+                    return false;
+                }
+                cmd = _cmd;
+                return true;
+            }
+            catch (e) {
+                console.log("Error while parsing comment at " + comment.url + ": " + e);
+                return false;
+            }
+        });
+        if (cmd == null) {
+            console.log("pull request doesn't have a commands associated with it");
+            return;
+        }
+        // Now we can check if the PR command is satisfied
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -185,23 +222,7 @@ function run() {
                     // - check if the condition for the comment is met
                     // - check if the current pull request checks have all passed, it's not a draft
                     //   idea: add "waiting-for-other" label
-                    var prInfo = {
-                        owner: github.context.repo.owner,
-                        repo: github.context.repo.repo,
-                        // For pulls API
-                        pull_number: github.context.issue.number,
-                        // For comments API
-                        issue_number: github.context.issue.number,
-                        per_page: 100,
-                    };
-                    var pr = yield client.rest.pulls.get(prInfo);
-                    core.group("pull request info", () => __awaiter(this, void 0, void 0, function* () {
-                        console.log(JSON.stringify(pr));
-                    }));
-                    var comments = yield client.rest.issues.listComments(prInfo);
-                    core.group("pull request comments", () => __awaiter(this, void 0, void 0, function* () {
-                        console.log(JSON.stringify(comments));
-                    }));
+                    yield checkPullRequest(client, github.context.issue.number);
                     break;
                 case "workflow_dispatch":
                 case "schedule":
