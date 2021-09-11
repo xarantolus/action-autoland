@@ -33,10 +33,14 @@ async function run(): Promise<void> {
         };
 
         var pr = await client.rest.pulls.get(prInfo);
-        core.debug("pull request:\n" + JSON.stringify(pr));
+        core.group("pull request info", async () => {
+          console.log(JSON.stringify(pr));
+        });
 
         var comments = await client.rest.issues.listComments(prInfo);
-        core.debug("pull request comments:\n" + JSON.stringify(comments));
+        core.group("pull request comments", async () => {
+          console.log(JSON.stringify(comments));
+        });
 
         break;
       case "workflow_dispatch":

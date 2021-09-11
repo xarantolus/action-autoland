@@ -61,21 +61,24 @@ function run() {
                         pull_number: github.context.issue.number,
                         // For comments API
                         issue_number: github.context.issue.number,
-                        per_page: 100
+                        per_page: 100,
                     };
                     var pr = yield client.rest.pulls.get(prInfo);
-                    core.debug("pull request:\n" + JSON.stringify(pr));
+                    core.group("pull request info", () => __awaiter(this, void 0, void 0, function* () {
+                        console.log(JSON.stringify(pr));
+                    }));
                     var comments = yield client.rest.issues.listComments(prInfo);
-                    core.debug("pull request comments:\n" + JSON.stringify(comments));
+                    core.group("pull request comments", () => __awaiter(this, void 0, void 0, function* () {
+                        console.log(JSON.stringify(comments));
+                    }));
                     break;
                 case "workflow_dispatch":
                 case "schedule":
-                    // Here 
+                    // Here
                     break;
                 default:
                     throw new Error("unexpected event name " + github.context.eventName);
             }
-            ;
         }
         catch (error) {
             core.setFailed(error.message);
