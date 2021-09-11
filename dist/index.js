@@ -279,7 +279,8 @@ function checkPullRequest(client, pullRequestNumber) {
         var satisfied = true;
         for (const dependency of cmd.dependencies) {
             try {
-                if (!dependency.isSatisfied(client, prInfo.owner, prInfo.repo)) {
+                var _satisfied = yield dependency.isSatisfied(client, prInfo.owner, prInfo.repo);
+                if (!_satisfied) {
                     satisfied = false;
                     break;
                 }

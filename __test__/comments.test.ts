@@ -36,6 +36,13 @@ test("ref parsing correctness", () => {
   });
 
   expect(
+    Reference.parse("https://github.com/xarantolus/test-action-repo/issues/2")
+  ).toEqual({
+    repoSlug: "xarantolus/test-action-repo",
+    issueNumber: 2,
+  });
+
+  expect(
     Reference.parse("other/repo#7057a654720ef532ad11f920e57a33f59890d702")
   ).toEqual({
     repoSlug: "other/repo",
