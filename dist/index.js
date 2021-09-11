@@ -395,6 +395,20 @@ function checkPullRequest(client, pr) {
             return;
         }
         console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);
+        // Check if all runs/checks for this PR are passed/green
+        var checks = yield client.rest.checks.listForRef({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            ref: pr.head.sha,
+        });
+        var checksNotOk = checks.data.check_runs.find((run) => {
+            // if it isn't neutral, successful or skipped, then we need to wait a bit longer
+            return !(["neutral", "success", "skipped"].includes(run.conclusion || ""));
+        });
+        if (checksNotOk) {
+            console.log(`Check ${checksNotOk.name} is not OK, it's state is ${checksNotOk.conclusion || "null"}`);
+            return;
+        }
         // Now we can check if the PR command is satisfied
         var satisfied = true;
         for (const dependency of cmd.dependencies) {
@@ -416,23 +430,10 @@ function checkPullRequest(client, pr) {
             console.log("pull request is not yet satisfied");
             return;
         }
-        console.log("All conditions are satisfied.");
+        console.log("Dependency conditions are satisfied. Continuing with merge.");
         var mergeMethod = core.getInput("merge-method", {
             required: true,
         });
-        // Check if the PR is mergeable. This attribute can be null because
-        // when listing PRs, we don't get the detailed representation
-        if (pr.mergeable == null || pr.mergeable == undefined) {
-            pr = (yield client.rest.pulls.get({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                pull_number: github.context.issue.number,
-            })).data;
-        }
-        if (!pr.mergeable) {
-            console.log("PR is not yet mergeable. Make sure all status checks are green and that there are no conflicts.");
-            return;
-        }
         yield client.rest.pulls.merge({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,

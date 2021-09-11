@@ -29,7 +29,7 @@ export async function checkPullRequest(
     draft?: boolean;
     body: string | null;
     author_association?: string | null;
-    mergeable?: boolean | null;
+    head: { sha: string };
   }
 ) {
   console.log(
@@ -92,6 +92,29 @@ export async function checkPullRequest(
 
   console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);
 
+  // Check if all runs/checks for this PR are passed/green
+  var checks = await client.rest.checks.listForRef({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+
+    ref: pr.head.sha,
+  });
+
+  var checksNotOk = checks.data.check_runs.find((run) => {
+    // if it isn't neutral, successful or skipped, then we need to wait a bit longer
+    return !["neutral", "success", "skipped"].includes(run.conclusion || "");
+  });
+
+  if (checksNotOk) {
+    console.log(
+      `Check ${checksNotOk.name} is not OK, it's state is ${
+        checksNotOk.conclusion || "null"
+      }`
+    );
+
+    return;
+  }
+
   // Now we can check if the PR command is satisfied
 
   var satisfied = true;
@@ -119,31 +142,11 @@ export async function checkPullRequest(
     return;
   }
 
-  console.log("All conditions are satisfied.");
+  console.log("Dependency conditions are satisfied. Continuing with merge.");
 
   var mergeMethod = core.getInput("merge-method", {
     required: true,
   });
-
-  // Check if the PR is mergeable. This attribute can be null because
-  // when listing PRs, we don't get the detailed representation
-  if (pr.mergeable == null || pr.mergeable == undefined) {
-    pr = (
-      await client.rest.pulls.get({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-
-        pull_number: github.context.issue.number,
-      })
-    ).data;
-  }
-
-  if (!pr.mergeable) {
-    console.log(
-      "PR is not yet mergeable. Make sure all status checks are green and that there are no conflicts."
-    );
-    return;
-  }
 
   await client.rest.pulls.merge({
     owner: github.context.repo.owner,
