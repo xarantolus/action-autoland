@@ -344,7 +344,8 @@ function run() {
             }
         }
         catch (error) {
-            core.setFailed(error.message);
+            core.setFailed("Error while running action: " + error.message);
+            console.trace();
         }
     });
 }

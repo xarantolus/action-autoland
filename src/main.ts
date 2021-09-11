@@ -144,7 +144,9 @@ async function run(): Promise<void> {
         throw new Error("unexpected event name " + github.context.eventName);
     }
   } catch (error) {
-    core.setFailed(error.message);
+    core.setFailed("Error while running action: " + error.message);
+
+    console.trace();
   }
 }
 
