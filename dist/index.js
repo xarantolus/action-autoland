@@ -257,7 +257,7 @@ function checkPullRequest(client, pr) {
         var prInfo = {
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
-            issue_number: pr.id,
+            issue_number: pr.number,
             per_page: 100,
         };
         var comments = yield client.rest.issues.listComments(prInfo).catch((e) => {
