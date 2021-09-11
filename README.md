@@ -2,14 +2,14 @@
 autoland is a Github Action that allows you to automatically merge pull requests when another repository merges a pull request or commit.
 
 ### How it works:
-1. Create a pull request on your own repository
-2. Include the text `autoland after other/repo#12` in your pull request text or just add it as a comment
+1. You or someone else creates a pull request on your own repository
+2. Include the text `autoland after other/repo#12` in the pull request text or just add it as a comment
 3. Some time after the referenced pull request is merged, autoland will merge yours too
 
-### Setup
-**WARNING**: This is not yet ready for your repository, except if you want to test. Adding this action to your repository could allow an attacker to merge their own PR.
+### Setup & Configuration
+**WARNING**: This is not yet ready for general use, except if you want to test. Adding this action to your repository could allow an attacker to merge their own PR, which is a security risk.
 
-1. Create a new workflow file in your repository, e.g. at `.github/workflows/autoland.yml`.
+1. Create a new workflow file in your repository, e.g. at `.github/workflows/autoland.yml` (or just go to the Actions tab and create a new file from there).
 2. Paste the following content:
 ```yml
 name: Auto-Merge PRs
@@ -54,10 +54,10 @@ jobs:
 
 Now you can comment on a pull request to make it depend on another commit or pull request (or issue) that has not yet been merged.
 
+You can put the command anywhere in the pull request body or in a comment. From the first 100 comments on a PR, this action will choose **only the last comment that contains a command**. If that comment contains multiple commands, it's required that *all* conditions from all provided commands are met for the merge to be done (that's also the case for a single command with multiple dependencies).
+
 ### Comment format
 This action supports formats for issues, pull requests and commits from either your own or external (GitHub) repositories.
-
-You can put the command anywhere in the pull request body or in a comment. From the first 100 comments on a PR, this action will choose **only the last comment that contains a command**. If that comment contains multiple commands, it's required that *all* conditions from all provided commands are met for the merge to be done.
 
 The following command texts can be used:
 * ```autoland after #2```

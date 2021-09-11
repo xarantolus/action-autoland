@@ -339,7 +339,6 @@ function authorHasPermission(association) {
         .split(/,\s+/g)
         .map((x) => x.toUpperCase().trim())
         .filter((x) => x.length !== 0);
-    console.log("Association: ", allowedAssociations, association);
     return allowedAssociations.includes(association.toUpperCase().trim());
 }
 // checkPullRequest checks if a PR can be merged and does so if possible

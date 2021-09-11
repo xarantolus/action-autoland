@@ -14,8 +14,6 @@ function authorHasPermission(association: string | null | undefined) {
     .map((x) => x.toUpperCase().trim())
     .filter((x) => x.length !== 0);
 
-  console.log("Association: ", allowedAssociations, association);
-
   return allowedAssociations.includes(association.toUpperCase().trim());
 }
 
@@ -30,7 +28,6 @@ export async function checkPullRequest(
     number: number;
     draft?: boolean;
     body: string | null;
-    mergeable?: boolean | null;
     author_association?: string | null;
   }
 ) {
