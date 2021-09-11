@@ -1,4 +1,4 @@
-import { Reference } from "../src/comment";
+import { Reference, LandAfterCommand } from "../src/comment";
 import { expect, test } from "@jest/globals";
 
 test("ref parsing correctness", () => {
@@ -57,4 +57,45 @@ test("parsing invalid refs", () => {
   expect(() => Reference.parse("x#5")).toThrowError();
   expect(() => Reference.parse("#0.5")).toThrowError();
   expect(() => Reference.parse("a/b#notacommithash")).toThrowError();
+});
+
+
+test("parse whole comment", () => {
+  expect(LandAfterCommand.parse(`Seems like this PR is blocked by xarantolus/action-autoland#15.
+  
+  I will also mention another unrelated PR that nobody cares/about#18
+
+  autoland after xarantolus/action-autoland#15
+  `)).toEqual({
+    dependencies: [
+      new Reference("xarantolus/action-autoland", 15)
+    ]
+  })
+
+
+  expect(LandAfterCommand.parse(`Seems like this PR is blocked by xarantolus/action-autoland#15.
+  
+  autoland after xarantolus/action-autoland#15, xarantolus/action-autoland#16
+  `)).toEqual({
+    dependencies: [
+      new Reference("xarantolus/action-autoland", 15),
+      new Reference("xarantolus/action-autoland", 16)
+    ]
+  })
+
+  expect(LandAfterCommand.parse(`Seems like this PR is blocked by xarantolus/action-autoland#15.
+  
+  autoland after xarantolus/action-autoland#15, xarantolus/action-autoland#16
+
+  But i wrote it twice:
+  autoLand afTer xarantolus/action-autoland#15, xarantolus/action-autoland#76
+
+
+  `)).toEqual({
+    dependencies: [
+      new Reference("xarantolus/action-autoland", 15),
+      new Reference("xarantolus/action-autoland", 16),
+      new Reference("xarantolus/action-autoland", 76)
+    ]
+  })
 });

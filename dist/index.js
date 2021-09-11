@@ -7,41 +7,61 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Reference = exports.CommentCommand = void 0;
-class CommentCommand {
+exports.Reference = exports.LandAfterCommand = void 0;
+class LandAfterCommand {
+    constructor(_dependencies) {
+        this.dependencies = _dependencies;
+    }
     /*
-          Comment syntax:
-      
-          Merge after something has been merged:
-      
-              autoland after other/repo#15
-              autoland after other/repo/commithash
-              autoland after https://github.com/other/repo/commit/commithash [in branch]
-      
-          Merge after multiple (AND):
-      
-              autoland after other/repo#15, other/repo#16
-      
-          */
-    // static parseCommentCommand(body: string): CommentCommand[] {
-    //     const regex = /autoland after (.+)/ig;
-    //     var matches = regex.exec(body);
-    // }
+      Comment syntax:
+  
+      Merge after something has been merged:
+  
+          autoland after other/repo#15
+          autoland after other/repo/commithash
+          autoland after https://github.com/other/repo/commit/commithash [in branch]
+  
+      Merge after multiple (AND):
+  
+          autoland after other/repo#15, other/repo#16
+    */
+    static parse(body) {
+        const regex = /autoland after (.+)/ig;
+        var references = [];
+        let m;
+        while ((m = regex.exec(body)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+            // The result can be accessed through the `m`-variable.
+            this.parseInner(m[1]).forEach(r => {
+                if (!references.find((val) => val.equals(r))) {
+                    references.push(r);
+                }
+            });
+        }
+        return new LandAfterCommand(references);
+    }
     static parseInner(referenceText) {
         // split "a,;b;c" => ["a", "b", "c"]
         var references = referenceText
             .split(/[,;]/g)
-            .map((s) => s.trim())
-            .filter((s) => s.length === 0);
+            .map(s => s.trim())
+            .filter(s => s.length !== 0);
         return references.map((r) => Reference.parse(r));
     }
 }
-exports.CommentCommand = CommentCommand;
+exports.LandAfterCommand = LandAfterCommand;
 class Reference {
     constructor(repo, issue, commit) {
         this.repoSlug = repo;
         this.issueNumber = issue;
         this.commitHash = commit;
+    }
+    equals(other) {
+        return this.repoSlug === other.repoSlug && this.issueNumber === other.issueNumber
+            && this.commitHash === other.commitHash && this.commitBranch === other.commitBranch;
     }
     // Parse parses a reference from text like the following:
     // * #15
