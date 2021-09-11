@@ -49,7 +49,7 @@ export class Reference {
       return new Reference(undefined, undefined, m[1], m[2]);
     }
 
-    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issue))?(?:[\/#](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
+    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issues?))?(?:[\/#](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
 
     var res = refRegex.exec(refText);
     if (res == null) {
