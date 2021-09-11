@@ -245,7 +245,13 @@ const comment_1 = __nccwpck_require__(667);
 // - check if the current pull request checks have all passed, it's not a draft
 function checkPullRequest(client, pr) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (pr.state !== "open" || pr.draft) {
+        console.log(`Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${github.context.issue.number}`);
+        if (pr.state !== "open") {
+            console.log("PR is not open, cannot proceed");
+            return;
+        }
+        if (pr.draft) {
+            console.log("PR is a draft, cannot proceed");
             return;
         }
         var prInfo = {
@@ -275,6 +281,7 @@ function checkPullRequest(client, pr) {
             console.log("pull request doesn't have a commands associated with it");
             return;
         }
+        console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);
         // Now we can check if the PR command is satisfied
         var satisfied = true;
         for (const dependency of cmd.dependencies) {
@@ -282,6 +289,7 @@ function checkPullRequest(client, pr) {
                 var _satisfied = yield dependency.isSatisfied(client, prInfo.owner, prInfo.repo);
                 if (!_satisfied) {
                     satisfied = false;
+                    console.log(`Not satisfied with ${JSON.stringify(dependency)}`);
                     break;
                 }
             }
@@ -318,6 +326,7 @@ function run() {
                     break;
                 case "workflow_dispatch":
                 case "schedule":
+                    console.log(`Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`);
                     // Get all open PRs and check them
                     var currentPRs = yield client.rest.pulls.list({
                         owner: github.context.repo.owner,
@@ -325,6 +334,7 @@ function run() {
                         state: "open",
                         per_page: 100,
                     });
+                    console.log(`Checking all ${currentPRs.data.length} PRs for mergeability`);
                     yield Promise.all(currentPRs.data.map((pr) => __awaiter(this, void 0, void 0, function* () {
                         yield checkPullRequest(client, pr);
                     })));

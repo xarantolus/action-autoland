@@ -12,7 +12,16 @@ async function checkPullRequest(
   client: InstanceType<typeof GitHub>,
   pr: { state: string; id: number; draft?: boolean }
 ) {
-  if (pr.state !== "open" || pr.draft) {
+  console.log(
+    `Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${github.context.issue.number}`
+  );
+
+  if (pr.state !== "open") {
+    console.log("PR is not open, cannot proceed");
+    return;
+  }
+  if (pr.draft) {
+    console.log("PR is a draft, cannot proceed");
     return;
   }
 
@@ -51,6 +60,8 @@ async function checkPullRequest(
     return;
   }
 
+  console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);
+
   // Now we can check if the PR command is satisfied
 
   var satisfied = true;
@@ -64,6 +75,7 @@ async function checkPullRequest(
       );
       if (!_satisfied) {
         satisfied = false;
+        console.log(`Not satisfied with ${JSON.stringify(dependency)}`);
         break;
       }
     } catch (e) {
@@ -106,6 +118,10 @@ async function run(): Promise<void> {
         break;
       case "workflow_dispatch":
       case "schedule":
+        console.log(
+          `Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`
+        );
+
         // Get all open PRs and check them
         var currentPRs = await client.rest.pulls.list({
           owner: github.context.repo.owner,
@@ -114,6 +130,9 @@ async function run(): Promise<void> {
           per_page: 100,
         });
 
+        console.log(
+          `Checking all ${currentPRs.data.length} PRs for mergeability`
+        );
         await Promise.all(
           currentPRs.data.map(async (pr) => {
             await checkPullRequest(client, pr);
