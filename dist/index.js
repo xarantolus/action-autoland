@@ -263,11 +263,11 @@ function checkPullRequest(client, pr) {
         var comments = yield client.rest.issues.listComments(prInfo).catch((e) => {
             throw new Error("Listing comments: " + e);
         });
-        // Now get the LAST comment on the PR that contains a command
+        // Now get the LAST comment on the PR (or PR body itself) that contains a command
         var cmd;
-        comments.data.reverse().find((comment) => {
+        var parseCommandText = function (text) {
             try {
-                var _cmd = comment_1.LandAfterCommand.parse(comment.body || comment.body_text || "");
+                var _cmd = comment_1.LandAfterCommand.parse(text);
                 if (_cmd.dependencies.length === 0) {
                     return false;
                 }
@@ -275,12 +275,18 @@ function checkPullRequest(client, pr) {
                 return true;
             }
             catch (e) {
-                console.log("Error while parsing comment at " + comment.url + ": " + e);
+                console.log("Error while parsing comment: " + e + "\nBody:\n" + text);
                 return false;
             }
+        };
+        if (pr.body) {
+            parseCommandText(pr.body);
+        }
+        comments.data.reverse().find((comment) => {
+            return parseCommandText(comment.body || comment.body_text || "");
         });
         if (!cmd) {
-            console.log("pull request doesn't have a commands associated with it");
+            console.log("pull request doesn't have any commands associated with it");
             return;
         }
         console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);

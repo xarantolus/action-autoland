@@ -10,7 +10,7 @@ import { LandAfterCommand } from "./comment";
 // - check if the current pull request checks have all passed, it's not a draft
 async function checkPullRequest(
   client: InstanceType<typeof GitHub>,
-  pr: { state: string; number: number; draft?: boolean }
+  pr: { state: string; number: number; draft?: boolean; body: string | null }
 ) {
   console.log(
     `Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${github.context.issue.number}`
@@ -37,14 +37,12 @@ async function checkPullRequest(
     throw new Error("Listing comments: " + e);
   });
 
-  // Now get the LAST comment on the PR that contains a command
+  // Now get the LAST comment on the PR (or PR body itself) that contains a command
   var cmd: LandAfterCommand | null | undefined;
 
-  comments.data.reverse().find((comment) => {
+  var parseCommandText = function (text: string) {
     try {
-      var _cmd = LandAfterCommand.parse(
-        comment.body || comment.body_text || ""
-      );
+      var _cmd = LandAfterCommand.parse(text);
       if (_cmd.dependencies.length === 0) {
         return false;
       }
@@ -52,13 +50,20 @@ async function checkPullRequest(
       cmd = _cmd;
       return true;
     } catch (e) {
-      console.log("Error while parsing comment at " + comment.url + ": " + e);
+      console.log("Error while parsing comment: " + e + "\nBody:\n" + text);
       return false;
     }
+  };
+
+  if (pr.body) {
+    parseCommandText(pr.body);
+  }
+  comments.data.reverse().find((comment) => {
+    return parseCommandText(comment.body || comment.body_text || "");
   });
 
   if (!cmd) {
-    console.log("pull request doesn't have a commands associated with it");
+    console.log("pull request doesn't have any commands associated with it");
     return;
   }
 
