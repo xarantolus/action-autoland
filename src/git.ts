@@ -157,11 +157,7 @@ export class Reference {
         head: this.commitBranch || "HEAD",
       });
 
-      console.log(JSON.stringify(commitInfo.data));
-
       var isMerged = ["identical", "behind"].includes(commitInfo.data.status);
-
-      console.log(isMerged);
 
       return isMerged;
     }

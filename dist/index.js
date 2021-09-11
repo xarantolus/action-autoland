@@ -187,9 +187,7 @@ class Reference {
                     base: this.commitHash,
                     head: this.commitBranch || "HEAD",
                 });
-                console.log(JSON.stringify(commitInfo.data));
                 var isMerged = ["identical", "behind"].includes(commitInfo.data.status);
-                console.log(isMerged);
                 return isMerged;
             }
             return false;
@@ -358,7 +356,7 @@ function run() {
                             yield checkPullRequest(client, pr);
                         }
                         catch (e) {
-                            console.log(`Error while checking ${pr.id}: ${e}`);
+                            console.log(`Error while checking ${pr.number}: ${e}`);
                             console.trace();
                         }
                     }

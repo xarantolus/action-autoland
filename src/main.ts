@@ -159,7 +159,7 @@ async function run(): Promise<void> {
           try {
             await checkPullRequest(client, pr);
           } catch (e) {
-            console.log(`Error while checking ${pr.id}: ${e}`);
+            console.log(`Error while checking ${pr.number}: ${e}`);
             console.trace();
           }
         }
