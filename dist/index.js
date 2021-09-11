@@ -362,7 +362,9 @@ function checkPullRequest(client, pr) {
                 issue_number: pr.number,
                 per_page: 100,
             };
-            var comments = yield client.rest.issues.listComments(prInfo).catch((e) => {
+            var comments = yield client.rest.issues
+                .listComments(prInfo)
+                .catch((e) => {
                 throw new Error("Listing comments: " + e);
             });
             // Now get the LAST comment on the PR (or PR body itself) that contains a command
