@@ -156,8 +156,6 @@ export class Reference {
         basehead: `${this.commitBranch || "HEAD"}...${this.commitHash}`,
       });
 
-      console.log(JSON.stringify(commitInfo));
-
       if (commitInfo.status === 200) {
         return ["identical", "behind"].includes(commitInfo.data.status);
       }
