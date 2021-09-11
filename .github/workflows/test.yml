@@ -1,10 +1,7 @@
-name: 'build-test'
+name: Build test
 on:
   pull_request:
   push:
-    branches:
-      - main
-      - 'releases/*'
 
 jobs:
   build:
