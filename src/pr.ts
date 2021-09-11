@@ -127,10 +127,6 @@ export async function checkPullRequest(
     required: true,
   });
 
-  if (!pr.mergeable) {
-    console.log("pull request is not yet mergeable.");
-  }
-
   await client.rest.pulls.merge({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,

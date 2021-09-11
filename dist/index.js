@@ -334,8 +334,11 @@ function authorHasPermission(association) {
     if (!association) {
         return false;
     }
-    var allowedAssociations = core.getInput("users").split(/,\s+/g)
-        .map((x) => x.toUpperCase().trim()).filter(x => x.length !== 0);
+    var allowedAssociations = core
+        .getInput("users")
+        .split(/,\s+/g)
+        .map((x) => x.toUpperCase().trim())
+        .filter((x) => x.length !== 0);
     console.log("Association: ", allowedAssociations, association);
     return allowedAssociations.includes(association.toUpperCase().trim());
 }
@@ -418,9 +421,6 @@ function checkPullRequest(client, pr) {
         var mergeMethod = core.getInput("merge-method", {
             required: true,
         });
-        if (!pr.mergeable) {
-            console.log("pull request is not yet mergeable.");
-        }
         yield client.rest.pulls.merge({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
