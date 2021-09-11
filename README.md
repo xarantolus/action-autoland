@@ -1,105 +1,84 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
+# autoland
+autoland is a Github Action that allows you to automatically merge pull requests when another repository merges a pull request or commit.
 
-# Create a JavaScript Action using TypeScript
+### How it works:
+1. Create a pull request on your own repository
+2. Include the text `autoland after other/repo#12` in your pull request text or just add it as a comment
+3. Some time after the referenced pull request is merged, autoland will merge yours too
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+### Setup
+**WARNING**: This is not yet ready for your repository, except if you want to test. Adding this action to your repository could allow an attacker to merge their own PR.
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.  
+1. Create a new workflow file in your repository, e.g. at `.github/workflows/autoland.yml`.
+2. Paste the following content:
+```yml
+name: Auto-Merge PRs
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+# These are the events the job needs to listen for in order to merge pull requests
+on:
+  # It checks if a single pull request has new criteria for merging (via "autoland after ..." comments)
+  pull_request:
+  issue_comment:
+  pull_request_review:
+  pull_request_review_comment:
 
-## Create an action from this template
+  # It also wants to know when pull requests are ready for merging
+  check_suite:
 
-Click the `Use this Template` and provide the new repo details for your action
+  # Periodically check if external repositories have merged the PRs that ours depend on
+  schedule:
+    - cron: "30 */2 * * *"
 
-## Code in Main
+  # You can also run the check manually
+  workflow_dispatch:
 
-> First, you'll need to have a reasonably modern version of `node` handy. This won't work with versions older than 9, for instance.
-
-Install the dependencies  
-```bash
-$ npm install
+jobs:
+  auto-merge:
+    name: Autoland Pull Request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: xarantolus/action-autoland@main
+        with:
+          # How PRs should be merged
+          #   Allowed values 'merge', 'squash' or 'rebase'
+          #   See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github
+          merge-method: merge 
+          # Which user types are allowed to comment "autoland after" comments (other users are ignored)
+          #   See https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
+          users:
+            OWNER
+            COLLABORATOR
+            MEMBER
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Build the typescript and package it for distribution
-```bash
-$ npm run build && npm run package
-```
+3. Commit & push the file
 
-Run the tests :heavy_check_mark:  
-```bash
-$ npm test
+Now you can comment on a pull request to make it depend on another commit or pull request (or issue) that has not yet been merged.
 
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
+### Comment format
+This action supports formats for issues, pull requests and commits from either your own or external (GitHub) repositories.
 
-...
-```
+You can put the command anywhere in the pull request body or in a comment. From the first 100 comments on a PR, this action will choose **only the last comment that contains a command**. If that comment contains multiple commands, it's required that *all* conditions from all provided commands are met for the merge to be done.
 
-## Change action.yml
+The following command texts can be used:
+* ```autoland after #2```
+  * Merges the PR after issue or PR `#2` is closed (also when the PR has *not* been merged, but closed)
+* `autoland after https://github.com/other/repo/pull/1`
+  * Merges the PR after PR `#1` of `other/repo` has been closed (again, this does not necessarily mean that it was merged)
+* `autoland after other/repo#7057a654720ef532ad11f920e57a33f59890d702`
+  * Merge PR after the commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is present in the **default branch** of `other/repo`
+* `autoland after other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop`
+  * Merge PR after the commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is present in the `develop` branch of `other/repo`
 
-The action.yml contains defines the inputs and output for your action.
 
-Update the action.yml with your name, description, inputs and outputs for your action.
+You can also add multiple conditions by separating them with a comma:
+* `autoland after #2, other/repo#3, 7057a654720ef532ad11f920e57a33f59890d702, other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop`
+  * Merges this PR when ALL of the following is true:
+    * Issue/PR `#2` of this repository is closed
+    * Issue/PR `#3` of the `other/repo` repository is closed
+    * Commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is in the default branch of this repository
+    * Commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is in the `develop` branch of `other/repo`
 
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder. 
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-```bash
-$ npm run package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
-
-```yaml
-uses: ./
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/typescript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
+It also understands other formats, mostly GitHub URLs to commits and PRs (see [tests](__test__/comments.test.ts)). If you find that a format doesn't work, please feel free to open an issue.
