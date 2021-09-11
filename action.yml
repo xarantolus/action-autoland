@@ -1,11 +1,13 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Autoland'
+description: 'Automatically merge PRs when another repository merges a PR or commit'
+author: 'xarantolus'
+
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  # TODO: Set which users (e.g. repo owner only, contributors etc.) can create merge comments
+
+env:
+  "GITHUB_TOKEN": "As provided by Github Actions"
+
 runs:
   using: 'node12'
   main: 'dist/index.js'
