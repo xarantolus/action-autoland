@@ -150,16 +150,17 @@ export class Reference {
     }
 
     if (this.commitHash) {
-      var commitInfo = await client.rest.repos.compareCommits({
+      var commitInfo = await client.rest.repos.compareCommitsWithBasehead({
         owner: repo.owner,
         repo: repo.repo,
-        base: this.commitHash,
-        head: this.commitBranch || "HEAD",
+        basehead: `${this.commitBranch || "HEAD"}...${this.commitHash}`,
       });
 
-      var isMerged = ["identical", "behind"].includes(commitInfo.data.status);
+      if (commitInfo.status === 200) {
+        return ["identical", "behind"].includes(commitInfo.data.status);
+      }
 
-      return isMerged;
+      return false;
     }
 
     return false;

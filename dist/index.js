@@ -181,14 +181,15 @@ class Reference {
                 return false;
             }
             if (this.commitHash) {
-                var commitInfo = yield client.rest.repos.compareCommits({
+                var commitInfo = yield client.rest.repos.compareCommitsWithBasehead({
                     owner: repo.owner,
                     repo: repo.repo,
-                    base: this.commitHash,
-                    head: this.commitBranch || "HEAD",
+                    basehead: `${this.commitBranch || "HEAD"}...${this.commitHash}`
                 });
-                var isMerged = ["identical", "behind"].includes(commitInfo.data.status);
-                return isMerged;
+                if (commitInfo.status === 200) {
+                    return ["identical", "behind"].includes(commitInfo.data.status);
+                }
+                return false;
             }
             return false;
         });
@@ -326,7 +327,7 @@ function checkPullRequest(client, pr) {
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             issue_number: pr.number,
-            body: "This pull request was automatically merged because all conditions from the last `autoland after` command were met."
+            body: "This pull request was automatically merged because all conditions from the last `autoland after` command were met.",
         });
     });
 }
