@@ -2,8 +2,8 @@ name: 'Autoland'
 description: 'Automatically merge PRs when another repository merges a PR or commit'
 author: 'xarantolus'
 
-inputs:
-  # TODO: Set which users (e.g. repo owner only, contributors etc.) can create merge comments
+# inputs:
+# TODO: Set which users (e.g. repo owner only, contributors etc.) can create merge comments
 
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
