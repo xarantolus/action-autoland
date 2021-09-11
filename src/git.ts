@@ -36,7 +36,7 @@ export class Reference {
       throw new Error("refText is empty");
     }
     // Is it a github repo text like user/repo ?
-    var slugOnlyRegex = /^(?:https?:\/\/github\.com\/)?([^\/]+\/[^\/#]+)\/?$/;
+    var slugOnlyRegex = /^(?:https?:\/\/github\.com\/)?([^\/]+\/[^\/#@]+)\/?$/;
     var m = slugOnlyRegex.exec(refText);
     if (m && m.length == 2) {
       return new Reference(m[1]);
@@ -49,7 +49,7 @@ export class Reference {
       return new Reference(undefined, undefined, m[1], m[2]);
     }
 
-    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issues?))?(?:[\/#](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
+    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issues?))?(?:[\/#@](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
 
     var res = refRegex.exec(refText);
     if (res == null) {

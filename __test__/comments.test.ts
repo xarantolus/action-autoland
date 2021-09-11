@@ -84,6 +84,23 @@ test("ref parsing correctness", () => {
     repoSlug: "xarantolus/action-autoland",
     commitHash: "8bd5cf32e6094213d80eac4d3176ca9b75b884a7",
   });
+
+  expect(
+    Reference.parse("other/repo@8bd5cf32e6094213d80eac4d3176ca9b75b884a7")
+  ).toEqual({
+    repoSlug: "other/repo",
+    commitHash: "8bd5cf32e6094213d80eac4d3176ca9b75b884a7",
+  });
+
+  expect(
+    Reference.parse(
+      "other/repo@8bd5cf32e6094213d80eac4d3176ca9b75b884a7 in develop"
+    )
+  ).toEqual({
+    repoSlug: "other/repo",
+    commitHash: "8bd5cf32e6094213d80eac4d3176ca9b75b884a7",
+    commitBranch: "develop",
+  });
 });
 
 test("parsing invalid refs", () => {

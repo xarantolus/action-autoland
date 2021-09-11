@@ -64,14 +64,14 @@ The following command texts can be used:
   * Merges the PR after issue or PR `#2` is closed (also when the PR has *not* been merged, but closed)
 * `autoland after https://github.com/other/repo/pull/1`
   * Merges the PR after PR `#1` of `other/repo` has been closed (again, this does not necessarily mean that it was merged)
-* `autoland after other/repo#7057a654720ef532ad11f920e57a33f59890d702`
+* `autoland after other/repo@7057a654720ef532ad11f920e57a33f59890d702`
   * Merge PR after the commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is present in the **default branch** of `other/repo`
-* `autoland after other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop`
+* `autoland after other/repo@7057a654720ef532ad11f920e57a33f59890d702 in develop`
   * Merge PR after the commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is present in the `develop` branch of `other/repo`
 
 
 You can also add multiple conditions by separating them with a comma:
-* `autoland after #2, other/repo#3, 7057a654720ef532ad11f920e57a33f59890d702, other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop`
+* `autoland after #2, other/repo#3, 7057a654720ef532ad11f920e57a33f59890d702, other/repo@7057a654720ef532ad11f920e57a33f59890d702 in develop`
   * Merges this PR when ALL of the following is true:
     * Issue/PR `#2` of this repository is closed
     * Issue/PR `#3` of the `other/repo` repository is closed
