@@ -239,21 +239,21 @@ const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
 const process_1 = __nccwpck_require__(765);
 const comment_1 = __nccwpck_require__(667);
-function checkPullRequest(client, pullRequestNumber) {
+// checkPullRequest checks if a PR can be merged and does so if possible
+// - check if that issue should be worked on (check for a comment that indicates so)
+// - check if the condition for the comment is met
+// - check if the current pull request checks have all passed, it's not a draft
+function checkPullRequest(client, pr) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (pr.state !== "open" || pr.draft) {
+            return;
+        }
         var prInfo = {
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
-            // For pulls API
-            pull_number: pullRequestNumber,
-            // For comments API
-            issue_number: pullRequestNumber,
+            issue_number: pr.id,
             per_page: 100,
         };
-        var pr = yield client.rest.pulls.get(prInfo);
-        if (pr.data.state !== "open") {
-            return;
-        }
         var comments = yield client.rest.issues.listComments(prInfo);
         // Now get the LAST comment on the PR that contains a command
         var cmd;
@@ -308,16 +308,26 @@ function run() {
                 case "pull_request_review":
                 case "pull_request_review_comment":
                 case "check_suite":
-                    // Here we are working on a single issue:
-                    // - check if that issue should be worked on (check for a comment that indicates so)
-                    // - check if the condition for the comment is met
-                    // - check if the current pull request checks have all passed, it's not a draft
-                    //   idea: add "waiting-for-other" label
-                    yield checkPullRequest(client, github.context.issue.number);
+                    // Here we are working on a single pr (github treats them as issues):
+                    var pr = yield client.rest.pulls.get({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        pull_number: github.context.issue.number,
+                    });
+                    yield checkPullRequest(client, pr.data);
                     break;
                 case "workflow_dispatch":
                 case "schedule":
-                    // Here
+                    // Get all open PRs and check them
+                    var currentPRs = yield client.rest.pulls.list({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        state: "open",
+                        per_page: 100,
+                    });
+                    yield Promise.all(currentPRs.data.map((pr) => __awaiter(this, void 0, void 0, function* () {
+                        yield checkPullRequest(client, pr);
+                    })));
                     break;
                 default:
                     throw new Error("unexpected event name " + github.context.eventName);

@@ -4,26 +4,25 @@ import { GitHub } from "@actions/github/lib/utils";
 import { env } from "process";
 import { LandAfterCommand } from "./comment";
 
+// checkPullRequest checks if a PR can be merged and does so if possible
+// - check if that issue should be worked on (check for a comment that indicates so)
+// - check if the condition for the comment is met
+// - check if the current pull request checks have all passed, it's not a draft
 async function checkPullRequest(
   client: InstanceType<typeof GitHub>,
-  pullRequestNumber: number
+  pr: { state: string; id: number; draft?: boolean }
 ) {
+  if (pr.state !== "open" || pr.draft) {
+    return;
+  }
+
   var prInfo = {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
 
-    // For pulls API
-    pull_number: pullRequestNumber,
-
-    // For comments API
-    issue_number: pullRequestNumber,
+    issue_number: pr.id,
     per_page: 100,
   };
-
-  var pr = await client.rest.pulls.get(prInfo);
-  if (pr.data.state !== "open") {
-    return;
-  }
 
   var comments = await client.rest.issues.listComments(prInfo);
 
@@ -93,18 +92,33 @@ async function run(): Promise<void> {
       case "pull_request_review":
       case "pull_request_review_comment":
       case "check_suite":
-        // Here we are working on a single issue:
-        // - check if that issue should be worked on (check for a comment that indicates so)
-        // - check if the condition for the comment is met
-        // - check if the current pull request checks have all passed, it's not a draft
-        //   idea: add "waiting-for-other" label
+        // Here we are working on a single pr (github treats them as issues):
 
-        await checkPullRequest(client, github.context.issue.number);
+        var pr = await client.rest.pulls.get({
+          owner: github.context.repo.owner,
+          repo: github.context.repo.repo,
+
+          pull_number: github.context.issue.number,
+        });
+
+        await checkPullRequest(client, pr.data);
 
         break;
       case "workflow_dispatch":
       case "schedule":
-        // Here
+        // Get all open PRs and check them
+        var currentPRs = await client.rest.pulls.list({
+          owner: github.context.repo.owner,
+          repo: github.context.repo.repo,
+          state: "open",
+          per_page: 100,
+        });
+
+        await Promise.all(
+          currentPRs.data.map(async (pr) => {
+            await checkPullRequest(client, pr);
+          })
+        );
 
         break;
       default:
