@@ -12,7 +12,7 @@ test("ref parse commit", () => {
     commitBranch: "main",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the main branch"
+    "commit 7057a654720ef532ad11f920e57a33f59890d702 must be merged into the main branch of this repository"
   );
 
   expect(
@@ -24,7 +24,7 @@ test("ref parse commit", () => {
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+    "commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 must be merged into the default branch of its repository"
   );
 
   expect(
@@ -36,7 +36,7 @@ test("ref parse commit", () => {
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+    "commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 must be merged into the default branch of its repository"
   );
 
   expect(
@@ -49,7 +49,7 @@ test("ref parse commit", () => {
     commitBranch: "develop",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the develop branch"
+    "commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 must be merged into the develop branch of its repository"
   );
 
   expect(
@@ -62,7 +62,7 @@ test("ref parse commit", () => {
     commitBranch: "develop",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the develop branch"
+    "commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 must be merged into the develop branch of its repository"
   );
 
   expect(
@@ -74,7 +74,7 @@ test("ref parse commit", () => {
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit xarantolus/action-autoland@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+    "commit xarantolus/action-autoland@7057a654720ef532ad11f920e57a33f59890d702 must be merged into the default branch of its repository"
   );
 
   expect(
@@ -83,7 +83,7 @@ test("ref parse commit", () => {
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+    "commit 7057a654720ef532ad11f920e57a33f59890d702 must be merged into the default branch of this repository"
   );
 
   expect(
@@ -92,7 +92,7 @@ test("ref parse commit", () => {
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+    "commit 7057a654720ef532ad11f920e57a33f59890d702 must be merged into the default branch of this repository"
   );
 
   expect(
@@ -101,7 +101,7 @@ test("ref parse commit", () => {
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+    "commit 7057a654720ef532ad11f920e57a33f59890d702 must be merged into the default branch of this repository"
   );
 
   expect(
@@ -113,7 +113,7 @@ test("ref parse commit", () => {
     commitHash: "8bd5cf32e6094213d80eac4d3176ca9b75b884a7",
   });
   expect(ref.toString()).toEqual(
-    "Waiting for commit xarantolus/action-autoland@8bd5cf32e6094213d80eac4d3176ca9b75b884a7 to be merged into the default branch"
+    "commit xarantolus/action-autoland@8bd5cf32e6094213d80eac4d3176ca9b75b884a7 must be merged into the default branch of its repository"
   );
 });
 
@@ -123,16 +123,14 @@ test("ref parse pr/issue", () => {
   expect((ref = Reference.parse("#15"))).toEqual({
     issueNumber: 15,
   });
-  expect(ref.toString()).toEqual(
-    "Waiting for PR/Issue #15 to be closed (or deleted)"
-  );
+  expect(ref.toString()).toEqual("PR/Issue #15 must be closed (or deleted)");
 
   expect((ref = Reference.parse("other/repo#15"))).toEqual({
     repoSlug: "other/repo",
     issueNumber: 15,
   });
   expect(ref.toString()).toEqual(
-    "Waiting for PR/Issue other/repo#15 to be closed (or deleted)"
+    "PR/Issue other/repo#15 must be closed (or deleted)"
   );
 
   expect(
@@ -144,7 +142,7 @@ test("ref parse pr/issue", () => {
     issueNumber: 1,
   });
   expect(ref.toString()).toEqual(
-    "Waiting for PR/Issue xarantolus/test-action-repo#1 to be closed (or deleted)"
+    "PR/Issue xarantolus/test-action-repo#1 must be closed (or deleted)"
   );
 
   expect(
@@ -156,7 +154,7 @@ test("ref parse pr/issue", () => {
     issueNumber: 2,
   });
   expect(ref.toString()).toEqual(
-    "Waiting for PR/Issue xarantolus/test-action-repo#2 to be closed (or deleted)"
+    "PR/Issue xarantolus/test-action-repo#2 must be closed (or deleted)"
   );
 });
 
@@ -260,6 +258,18 @@ test("parse whole comment", () => {
     dependencies: [
       new Reference(undefined, undefined, "e01cbf3ee"),
       new Reference(undefined, 9),
+    ],
+  });
+
+  expect(
+    LandAfterCommand.parse(
+      `autoland after 506d44f, #3, xarantolus/action-autoland@fa6a4e7`
+    )
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, undefined, "506d44f"),
+      new Reference(undefined, 3),
+      new Reference("xarantolus/action-autoland", undefined, "fa6a4e7"),
     ],
   });
 });

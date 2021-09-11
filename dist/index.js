@@ -189,10 +189,10 @@ class Reference {
     }
     toString() {
         if (this.issueNumber) {
-            return `Waiting for PR/Issue ${this.repoSlug || ""}#${this.issueNumber} to be closed (or deleted)`;
+            return `PR/Issue ${this.repoSlug || ""}#${this.issueNumber} must be closed (or deleted)`;
         }
         if (this.commitHash) {
-            return `Waiting for commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} to be merged into the ${this.commitBranch || "default"} branch`;
+            return `commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} must be merged into the ${this.commitBranch || "default"} branch of ${this.repoSlug ? "its" : "this"} repository`;
         }
         return JSON.stringify(this);
     }
@@ -399,7 +399,7 @@ function checkPullRequest(client, pr) {
                 console.log("pull request doesn't have any commands associated with it");
                 return;
             }
-            console.log(`Command/conditions for merge:\n${cmd.dependencies
+            console.log(`Waiting for the following conditions for merge:\n${cmd.dependencies
                 .map((x) => " -> " + x.toString())
                 .join("\n")}`);
             // Check if all runs/checks for this PR are passed/green

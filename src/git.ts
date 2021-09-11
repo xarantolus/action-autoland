@@ -161,17 +161,17 @@ export class Reference {
 
   public toString(): string {
     if (this.issueNumber) {
-      return `Waiting for PR/Issue ${this.repoSlug || ""}#${
+      return `PR/Issue ${this.repoSlug || ""}#${
         this.issueNumber
-      } to be closed (or deleted)`;
+      } must be closed (or deleted)`;
     }
 
     if (this.commitHash) {
-      return `Waiting for commit ${
-        this.repoSlug ? this.repoSlug + "@" : null || ""
-      }${this.commitHash} to be merged into the ${
-        this.commitBranch || "default"
-      } branch`;
+      return `commit ${this.repoSlug ? this.repoSlug + "@" : null || ""}${
+        this.commitHash
+      } must be merged into the ${this.commitBranch || "default"} branch of ${
+        this.repoSlug ? "its" : "this"
+      } repository`;
     }
 
     return JSON.stringify(this);
