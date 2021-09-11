@@ -334,7 +334,10 @@ function authorHasPermission(association) {
     if (!association) {
         return false;
     }
-    var allowedAssociations = core.getMultilineInput("users").map(x => x.toUpperCase().trim());
+    var allowedAssociations = core
+        .getMultilineInput("users")
+        .map((x) => x.toUpperCase().trim());
+    console.log("Association: ", allowedAssociations, association);
     return allowedAssociations.includes(association.toUpperCase().trim());
 }
 // checkPullRequest checks if a PR can be merged and does so if possible
@@ -343,7 +346,7 @@ function authorHasPermission(association) {
 // - check if the current pull request checks have all passed, it's not a draft
 function checkPullRequest(client, pr) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(`Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${github.context.issue.number}`);
+        console.log(`Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${pr.number}`);
         if (pr.state !== "open") {
             console.log("PR is not open, cannot proceed");
             return;

@@ -163,4 +163,17 @@ test("parse whole comment", () => {
       ),
     ],
   });
+
+  expect(
+    LandAfterCommand.parse(`
+
+    autoland after e01cbf3ee, #9
+
+  `)
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, undefined, "e01cbf3ee"),
+      new Reference(undefined, 9),
+    ],
+  });
 });

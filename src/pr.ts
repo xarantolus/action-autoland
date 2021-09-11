@@ -11,6 +11,9 @@ function authorHasPermission(association: string | null | undefined) {
   var allowedAssociations = core
     .getMultilineInput("users")
     .map((x) => x.toUpperCase().trim());
+
+  console.log("Association: ", allowedAssociations, association);
+
   return allowedAssociations.includes(association.toUpperCase().trim());
 }
 
@@ -30,7 +33,7 @@ export async function checkPullRequest(
   }
 ) {
   console.log(
-    `Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${github.context.issue.number}`
+    `Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${pr.number}`
   );
 
   if (pr.state !== "open") {
