@@ -330,6 +330,13 @@ exports.checkPullRequest = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
 const comment_1 = __nccwpck_require__(667);
+function authorHasPermission(association) {
+    if (!association) {
+        return false;
+    }
+    var allowedAssociations = core.getMultilineInput("users").map(x => x.toUpperCase().trim());
+    return allowedAssociations.includes(association.toUpperCase().trim());
+}
 // checkPullRequest checks if a PR can be merged and does so if possible
 // - check if that issue should be worked on (check for a comment that indicates so)
 // - check if the condition for the comment is met
@@ -370,11 +377,14 @@ function checkPullRequest(client, pr) {
                 return false;
             }
         };
-        if (pr.body) {
+        if (pr.body && authorHasPermission(pr.author_association)) {
             parseCommandText(pr.body);
         }
         comments.data.reverse().find((comment) => {
-            return parseCommandText(comment.body || comment.body_text || "");
+            if (authorHasPermission(comment.author_association)) {
+                return parseCommandText(comment.body || comment.body_text || "");
+            }
+            return false;
         });
         if (!cmd) {
             console.log("pull request doesn't have any commands associated with it");

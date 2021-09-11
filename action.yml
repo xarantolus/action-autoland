@@ -7,6 +7,13 @@ inputs:
     description: "How the merge should be performed. Must be 'merge', 'squash' or 'rebase'. See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github"
     required: false
     default: merge
+  users:
+    description: "Which types of users are allowed to create `autoland after` comments. See https://docs.github.com/en/graphql/reference/enums#commentauthorassociation"
+    required: false
+    default:
+      OWNER
+      COLLABORATOR
+      MEMBER
 
 env:
   GITHUB_TOKEN: "As provided by Github Actions"

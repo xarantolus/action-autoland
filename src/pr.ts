@@ -3,6 +3,17 @@ import * as github from "@actions/github";
 import { GitHub } from "@actions/github/lib/utils";
 import { LandAfterCommand } from "./comment";
 
+function authorHasPermission(association: string | null | undefined) {
+  if (!association) {
+    return false;
+  }
+
+  var allowedAssociations = core
+    .getMultilineInput("users")
+    .map((x) => x.toUpperCase().trim());
+  return allowedAssociations.includes(association.toUpperCase().trim());
+}
+
 // checkPullRequest checks if a PR can be merged and does so if possible
 // - check if that issue should be worked on (check for a comment that indicates so)
 // - check if the condition for the comment is met
@@ -15,6 +26,7 @@ export async function checkPullRequest(
     draft?: boolean;
     body: string | null;
     mergeable?: boolean | null;
+    author_association?: string | null;
   }
 ) {
   console.log(
@@ -60,11 +72,14 @@ export async function checkPullRequest(
     }
   };
 
-  if (pr.body) {
+  if (pr.body && authorHasPermission(pr.author_association)) {
     parseCommandText(pr.body);
   }
   comments.data.reverse().find((comment) => {
-    return parseCommandText(comment.body || comment.body_text || "");
+    if (authorHasPermission(comment.author_association)) {
+      return parseCommandText(comment.body || comment.body_text || "");
+    }
+    return false;
   });
 
   if (!cmd) {
