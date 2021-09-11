@@ -45,10 +45,7 @@ jobs:
           merge-method: merge 
           # Which user types are allowed to comment "autoland after" comments (other users are ignored)
           #   See https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
-          users:
-            OWNER
-            COLLABORATOR
-            MEMBER
+          users: owner, collaborator, member
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```

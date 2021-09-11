@@ -9,8 +9,10 @@ function authorHasPermission(association: string | null | undefined) {
   }
 
   var allowedAssociations = core
-    .getMultilineInput("users")
-    .map((x) => x.toUpperCase().trim());
+    .getInput("users")
+    .split(/,\s+/g)
+    .map((x) => x.toUpperCase().trim())
+    .filter((x) => x.length !== 0);
 
   console.log("Association: ", allowedAssociations, association);
 

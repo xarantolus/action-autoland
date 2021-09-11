@@ -10,10 +10,7 @@ inputs:
   users:
     description: "Which types of users are allowed to create `autoland after` comments. See https://docs.github.com/en/graphql/reference/enums#commentauthorassociation"
     required: false
-    default:
-      OWNER
-      COLLABORATOR
-      MEMBER
+    default: owner, collaborator, member
 
 env:
   GITHUB_TOKEN: "As provided by Github Actions"
