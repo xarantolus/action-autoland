@@ -1,8 +1,4 @@
-import * as github from "@actions/github";
-
-
 export class LandAfterCommand {
-
   dependencies: Reference[];
 
   constructor(_dependencies: Reference[]) {
@@ -23,7 +19,7 @@ export class LandAfterCommand {
         autoland after other/repo#15, other/repo#16
   */
   public static parse(body: string): LandAfterCommand {
-    const regex = /autoland after (.+)/ig;
+    const regex = /autoland after (.+)/gi;
 
     var references: Reference[] = [];
 
@@ -36,9 +32,9 @@ export class LandAfterCommand {
       }
 
       // The result can be accessed through the `m`-variable.
-      this.parseInner(m[1]).forEach(r => {
+      this.parseInner(m[1]).forEach((r) => {
         if (!references.find((val) => val.equals(r))) {
-          references.push(r)
+          references.push(r);
         }
       });
     }
@@ -50,8 +46,8 @@ export class LandAfterCommand {
     // split "a,;b;c" => ["a", "b", "c"]
     var references = referenceText
       .split(/[,;]/g)
-      .map(s => s.trim())
-      .filter(s => s.length !== 0);
+      .map((s) => s.trim())
+      .filter((s) => s.length !== 0);
 
     return references.map((r) => Reference.parse(r));
   }
@@ -65,16 +61,21 @@ export class Reference {
   public commitHash: string | undefined;
   public commitBranch: string | undefined;
 
-  constructor(repo?: String, issue?: number, commit?: string) {
+  constructor(repo?: String, issue?: number, commit?: string, branch?: string) {
     this.repoSlug = repo;
 
     this.issueNumber = issue;
     this.commitHash = commit;
+    this.commitBranch = branch;
   }
 
   public equals(other: Reference) {
-    return this.repoSlug === other.repoSlug && this.issueNumber === other.issueNumber
-      && this.commitHash === other.commitHash && this.commitBranch === other.commitBranch;
+    return (
+      this.repoSlug === other.repoSlug &&
+      this.issueNumber === other.issueNumber &&
+      this.commitHash === other.commitHash &&
+      this.commitBranch === other.commitBranch
+    );
   }
 
   // Parse parses a reference from text like the following:
@@ -94,19 +95,20 @@ export class Reference {
     }
 
     // Is it a commit hash?
-    var commitReg = /^(\d|[a-f])*$/;
-    if (commitReg.test(refText)) {
-      return new Reference(undefined, undefined, refText);
+    var commitWithBranchReg = /^([\da-f]+)\s*(?:in\s+([^\/#]+))?$/;
+    m = commitWithBranchReg.exec(refText);
+    if (m) {
+      return new Reference(undefined, undefined, m[1], m[2]);
     }
 
-    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issue))?(?:[\/#](\w+))$/gi;
+    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issue))?(?:[\/#](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
 
     var res = refRegex.exec(refText);
     if (res == null) {
       throw new Error("didn't match anything");
     }
-    if (res.length !== 5) {
-      throw new Error("expected res.length to be 5, but is " + res.length);
+    if (res.length !== 6) {
+      throw new Error("expected res.length to be 6, but is " + res.length);
     }
 
     var issueNumber = /^\d*$/.test(res[4])
@@ -114,8 +116,15 @@ export class Reference {
       : undefined;
 
     var commitHash = issueNumber ? undefined : res[4];
-    if (!commitReg.test(commitHash || "")) {
+    var commitHashReg = /^([\da-f]*)$/;
+    if (!commitHashReg.test(commitHash || "")) {
       throw new Error("malformed commit hash " + commitHash);
+    }
+
+    var targetBranch = res[5] || undefined;
+
+    if (!commitHash && targetBranch) {
+      throw new Error("need a commit hash for target branch matching")
     }
 
     var repoSplit = (res[1] || "").split("/");
@@ -141,6 +150,6 @@ export class Reference {
       );
     }
 
-    return new Reference(repoSlug, issueNumber, commitHash);
+    return new Reference(repoSlug, issueNumber, commitHash, targetBranch);
   }
 }

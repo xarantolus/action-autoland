@@ -26,7 +26,7 @@ class LandAfterCommand {
           autoland after other/repo#15, other/repo#16
     */
     static parse(body) {
-        const regex = /autoland after (.+)/ig;
+        const regex = /autoland after (.+)/gi;
         var references = [];
         let m;
         while ((m = regex.exec(body)) !== null) {
@@ -35,7 +35,7 @@ class LandAfterCommand {
                 regex.lastIndex++;
             }
             // The result can be accessed through the `m`-variable.
-            this.parseInner(m[1]).forEach(r => {
+            this.parseInner(m[1]).forEach((r) => {
                 if (!references.find((val) => val.equals(r))) {
                     references.push(r);
                 }
@@ -47,21 +47,24 @@ class LandAfterCommand {
         // split "a,;b;c" => ["a", "b", "c"]
         var references = referenceText
             .split(/[,;]/g)
-            .map(s => s.trim())
-            .filter(s => s.length !== 0);
+            .map((s) => s.trim())
+            .filter((s) => s.length !== 0);
         return references.map((r) => Reference.parse(r));
     }
 }
 exports.LandAfterCommand = LandAfterCommand;
 class Reference {
-    constructor(repo, issue, commit) {
+    constructor(repo, issue, commit, branch) {
         this.repoSlug = repo;
         this.issueNumber = issue;
         this.commitHash = commit;
+        this.commitBranch = branch;
     }
     equals(other) {
-        return this.repoSlug === other.repoSlug && this.issueNumber === other.issueNumber
-            && this.commitHash === other.commitHash && this.commitBranch === other.commitBranch;
+        return (this.repoSlug === other.repoSlug &&
+            this.issueNumber === other.issueNumber &&
+            this.commitHash === other.commitHash &&
+            this.commitBranch === other.commitBranch);
     }
     // Parse parses a reference from text like the following:
     // * #15
@@ -78,24 +81,30 @@ class Reference {
             return new Reference(m[1]);
         }
         // Is it a commit hash?
-        var commitReg = /^(\d|[a-f])*$/;
-        if (commitReg.test(refText)) {
-            return new Reference(undefined, undefined, refText);
+        var commitWithBranchReg = /^([\da-f]+)\s*(?:in\s+([^\/#]+))?$/;
+        m = commitWithBranchReg.exec(refText);
+        if (m) {
+            return new Reference(undefined, undefined, m[1], m[2]);
         }
-        var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issue))?(?:[\/#](\w+))$/gi;
+        var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issue))?(?:[\/#](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
         var res = refRegex.exec(refText);
         if (res == null) {
             throw new Error("didn't match anything");
         }
-        if (res.length !== 5) {
-            throw new Error("expected res.length to be 5, but is " + res.length);
+        if (res.length !== 6) {
+            throw new Error("expected res.length to be 6, but is " + res.length);
         }
         var issueNumber = /^\d*$/.test(res[4])
             ? parseInt(res[4], 10) || undefined
             : undefined;
         var commitHash = issueNumber ? undefined : res[4];
-        if (!commitReg.test(commitHash || "")) {
+        var commitHashReg = /^([\da-f]*)$/;
+        if (!commitHashReg.test(commitHash || "")) {
             throw new Error("malformed commit hash " + commitHash);
+        }
+        var targetBranch = res[5] || undefined;
+        if (!commitHash && targetBranch) {
+            throw new Error("need a commit hash for target branch matching");
         }
         var repoSplit = (res[1] || "").split("/");
         var repoSlug = repoSplit.length < 2 ? undefined : repoSplit.slice(0, 2).join("/");
@@ -112,7 +121,7 @@ class Reference {
         if (issueNumber && commitHash) {
             throw new Error("parsing error: got issue number and commit hash at the same time");
         }
-        return new Reference(repoSlug, issueNumber, commitHash);
+        return new Reference(repoSlug, issueNumber, commitHash, targetBranch);
     }
 }
 exports.Reference = Reference;
