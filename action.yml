@@ -4,7 +4,7 @@ author: 'xarantolus'
 
 inputs:
   merge-method:
-    description: 'How the merge should be performed. Must be 'merge', 'squash' or 'rebase'. See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github'
+    description: "How the merge should be performed. Must be 'merge', 'squash' or 'rebase'. See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github"
     required: false
     default: merge
 
