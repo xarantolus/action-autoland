@@ -75,6 +75,15 @@ test("ref parsing correctness", () => {
   expect(Reference.parse("7057a654720ef532ad11f920e57a33f59890d702")).toEqual({
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
+
+  expect(
+    Reference.parse(
+      "https://github.com/xarantolus/action-autoland/pull/2/commits/8bd5cf32e6094213d80eac4d3176ca9b75b884a7"
+    )
+  ).toEqual({
+    repoSlug: "xarantolus/action-autoland",
+    commitHash: "8bd5cf32e6094213d80eac4d3176ca9b75b884a7",
+  });
 });
 
 test("parsing invalid refs", () => {

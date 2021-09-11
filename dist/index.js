@@ -132,9 +132,8 @@ class Reference {
         if (repoSplit.length > 2) {
             // either commit|pull|issue
             var linkPart = repoSplit[2].toLowerCase();
-            if (commitHash && ["pull", "issue"].includes(linkPart)) {
-                throw new Error("parsing error: got commit hash from pr/issue url");
-            }
+            // pull and issue are fine, because you can link to a commit that is part of a pull request, 
+            // e.g. https://github.com/xarantolus/action-autoland/pull/2/commits/8bd5cf32e6094213d80eac4d3176ca9b75b884a7
             if (issueNumber && linkPart == "commit") {
                 throw new Error("parsing error: got issue number from commit url");
             }
