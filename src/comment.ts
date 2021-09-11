@@ -124,7 +124,7 @@ export class Reference {
     var targetBranch = res[5] || undefined;
 
     if (!commitHash && targetBranch) {
-      throw new Error("need a commit hash for target branch matching")
+      throw new Error("need a commit hash for target branch matching");
     }
 
     var repoSplit = (res[1] || "").split("/");

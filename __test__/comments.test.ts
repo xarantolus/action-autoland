@@ -2,10 +2,12 @@ import { Reference, LandAfterCommand } from "../src/comment";
 import { expect, test } from "@jest/globals";
 
 test("ref parsing correctness", () => {
-  expect(Reference.parse("7057a654720ef532ad11f920e57a33f59890d702 in main")).toEqual({
+  expect(
+    Reference.parse("7057a654720ef532ad11f920e57a33f59890d702 in main")
+  ).toEqual({
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
     commitBranch: "main",
-  })
+  });
 
   expect(Reference.parse("#15")).toEqual({
     issueNumber: 15,
@@ -40,11 +42,13 @@ test("ref parsing correctness", () => {
   });
 
   expect(
-    Reference.parse("other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop")
+    Reference.parse(
+      "other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop"
+    )
   ).toEqual({
     repoSlug: "other/repo",
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
-    commitBranch: "develop"
+    commitBranch: "develop",
   });
 
   expect(
@@ -63,7 +67,6 @@ test("ref parsing correctness", () => {
   expect(Reference.parse("7057a654720ef532ad11f920e57a33f59890d702")).toEqual({
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
-
 });
 
 test("parsing invalid refs", () => {
@@ -115,7 +118,6 @@ test("parse whole comment", () => {
     ],
   });
 
-
   expect(
     LandAfterCommand.parse(`We need a bunch of commits and PRs before this can be merged:
 
@@ -127,11 +129,21 @@ test("parse whole comment", () => {
   `)
   ).toEqual({
     dependencies: [
-      new Reference(undefined, undefined, "7057a654720ef532ad11f920e57a33f59890d702", "main"),
+      new Reference(
+        undefined,
+        undefined,
+        "7057a654720ef532ad11f920e57a33f59890d702",
+        "main"
+      ),
       new Reference("required/repo", 15),
       new Reference("xarantolus/action-autoland", 25),
       new Reference("xarantolus/action-autoland", undefined, "e57a33f5989"),
-      new Reference("xarantolus/action-autoland", undefined, "e57a33f5989", "develop"),
+      new Reference(
+        "xarantolus/action-autoland",
+        undefined,
+        "e57a33f5989",
+        "develop"
+      ),
     ],
   });
 });
