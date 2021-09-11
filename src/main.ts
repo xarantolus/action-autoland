@@ -10,7 +10,13 @@ import { LandAfterCommand } from "./comment";
 // - check if the current pull request checks have all passed, it's not a draft
 async function checkPullRequest(
   client: InstanceType<typeof GitHub>,
-  pr: { state: string; number: number; draft?: boolean; body: string | null }
+  pr: {
+    state: string;
+    number: number;
+    draft?: boolean;
+    body: string | null;
+    mergeable?: boolean | null;
+  }
 ) {
   console.log(
     `Checking PR ${github.context.repo.owner}/${github.context.repo.repo}#${github.context.issue.number}`
@@ -102,6 +108,10 @@ async function checkPullRequest(
     required: true,
   });
 
+  if (!pr.mergeable) {
+    console.log("pull request is not yet mergeable.");
+  }
+
   await client.rest.pulls.merge({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
@@ -110,6 +120,14 @@ async function checkPullRequest(
 
     // cast to any, then typescript doesn't complain about assignability
     merge_method: <any>mergeMethod,
+  });
+
+  await client.rest.issues.createComment({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+    issue_number: pr.number,
+    body:
+      "This pull request was automatically merged because all conditions from the last `autoland after` command were met.",
   });
 }
 
