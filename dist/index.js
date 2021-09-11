@@ -310,7 +310,17 @@ function checkPullRequest(client, pr) {
             console.log("pull request is not yet satisfied");
             return;
         }
-        console.log("would merge");
+        console.log("All conditions are satisfied.");
+        var mergeMethod = core.getInput("merge-method", {
+            required: true,
+        });
+        yield client.rest.pulls.merge({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            pull_number: pr.number,
+            // cast to any, then typescript doesn't complain about assignability
+            merge_method: mergeMethod,
+        });
     });
 }
 function run() {

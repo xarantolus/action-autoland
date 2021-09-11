@@ -96,7 +96,21 @@ async function checkPullRequest(
     return;
   }
 
-  console.log("would merge");
+  console.log("All conditions are satisfied.");
+
+  var mergeMethod = core.getInput("merge-method", {
+    required: true,
+  });
+
+  await client.rest.pulls.merge({
+    owner: github.context.repo.owner,
+    repo: github.context.repo.repo,
+
+    pull_number: pr.number,
+
+    // cast to any, then typescript doesn't complain about assignability
+    merge_method: <any>mergeMethod,
+  });
 }
 
 async function run(): Promise<void> {
