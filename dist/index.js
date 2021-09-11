@@ -10,28 +10,29 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Reference = exports.CommentCommand = void 0;
 class CommentCommand {
     /*
-        Comment syntax:
-    
-        Merge after something has been merged:
-    
-            autoland after other/repo#15
-            autoland after other/repo/commithash
-            autoland after https://github.com/other/repo/commit/commithash [in branch]
-    
-        Merge after multiple (AND):
-    
-            autoland after other/repo#15, other/repo#16
-    
-        */
+          Comment syntax:
+      
+          Merge after something has been merged:
+      
+              autoland after other/repo#15
+              autoland after other/repo/commithash
+              autoland after https://github.com/other/repo/commit/commithash [in branch]
+      
+          Merge after multiple (AND):
+      
+              autoland after other/repo#15, other/repo#16
+      
+          */
     // static parseCommentCommand(body: string): CommentCommand[] {
     //     const regex = /autoland after (.+)/ig;
     //     var matches = regex.exec(body);
     // }
     static parseInner(referenceText) {
         // split "a,;b;c" => ["a", "b", "c"]
-        var references = referenceText.split(/[,;]/g)
-            .map(s => s.trim())
-            .filter(s => s.length === 0);
+        var references = referenceText
+            .split(/[,;]/g)
+            .map((s) => s.trim())
+            .filter((s) => s.length === 0);
         return references.map((r) => Reference.parse(r));
     }
 }
