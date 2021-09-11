@@ -337,7 +337,7 @@ function run() {
                         per_page: 100,
                     });
                     console.log(`Checking all ${currentPRs.data.length} PRs for mergeability`);
-                    yield Promise.all(currentPRs.data.map((pr) => __awaiter(this, void 0, void 0, function* () {
+                    for (const pr of currentPRs.data) {
                         try {
                             yield checkPullRequest(client, pr);
                         }
@@ -345,7 +345,7 @@ function run() {
                             console.log(`Error while checking ${pr.id}: ${e}`);
                             console.trace();
                         }
-                    })));
+                    }
                     break;
                 default:
                     throw new Error("unexpected event name " + github.context.eventName);

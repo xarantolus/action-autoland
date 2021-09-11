@@ -135,16 +135,15 @@ async function run(): Promise<void> {
         console.log(
           `Checking all ${currentPRs.data.length} PRs for mergeability`
         );
-        await Promise.all(
-          currentPRs.data.map(async (pr) => {
-            try {
-              await checkPullRequest(client, pr);
-            } catch (e) {
-              console.log(`Error while checking ${pr.id}: ${e}`);
-              console.trace();
-            }
-          })
-        );
+
+        for (const pr of currentPRs.data) {
+          try {
+            await checkPullRequest(client, pr);
+          } catch (e) {
+            console.log(`Error while checking ${pr.id}: ${e}`);
+            console.trace();
+          }
+        }
 
         break;
       default:
