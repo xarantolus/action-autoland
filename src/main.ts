@@ -1,18 +1,16 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import * as github from '@actions/github'
+import { env } from 'process'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    const client = github.getOctokit(env.GITHUB_TOKEN || '')
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    console.log(env.GITHUB_EVENT_NAME)
 
-    core.setOutput('time', new Date().toTimeString())
+
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed((error || { message: "Unknown error" }).message)
   }
 }
 
