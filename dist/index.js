@@ -95,15 +95,9 @@ class Reference {
         if (refText.length === 0) {
             throw new Error("refText is empty");
         }
-        // Is it a github repo text like user/repo ?
-        var slugOnlyRegex = /^(?:https?:\/\/github\.com\/)?([^\/]+\/[^\/#@]+)\/?$/;
-        var m = slugOnlyRegex.exec(refText);
-        if (m && m.length == 2) {
-            return new Reference(m[1]);
-        }
         // Is it a commit hash?
         var commitWithBranchReg = /^([\da-f]+)\s*(?:in\s+([^\/#]+))?$/;
-        m = commitWithBranchReg.exec(refText);
+        var m = commitWithBranchReg.exec(refText);
         if (m) {
             return new Reference(undefined, undefined, m[1], m[2]);
         }

@@ -60,7 +60,7 @@ You can put the command anywhere in the pull request body or in a comment. From 
 This action supports formats for issues, pull requests and commits from either your own or external (GitHub) repositories.
 
 The following command texts can be used:
-* ```autoland after #2```
+* `autoland after #2`
   * Merges the PR after issue or PR `#2` is closed (also when the PR has *not* been merged, but closed)
 * `autoland after https://github.com/other/repo/pull/1`
   * Merges the PR after PR `#1` of `other/repo` has been closed (again, this does not necessarily mean that it was merged)
@@ -69,6 +69,10 @@ The following command texts can be used:
 * `autoland after other/repo@7057a654720ef532ad11f920e57a33f59890d702 in develop`
   * Merge PR after the commit with hash `7057a654720ef532ad11f920e57a33f59890d702` is present in the `develop` branch of `other/repo`
 
+For convenience you can also just use the GitHub URL(s) to the item(s), e.g.
+* `autoland after https://github.com/xarantolus/action-autoland/pull/2`
+* `autoland after https://github.com/xarantolus/test-action-repo/issues/9`
+* `autoland after https://github.com/xarantolus/test-action-repo/issues/9`
 
 You can also add multiple conditions by separating them with a comma:
 * `autoland after #2, other/repo#3, 7057a654720ef532ad11f920e57a33f59890d702, other/repo@7057a654720ef532ad11f920e57a33f59890d702 in develop`
