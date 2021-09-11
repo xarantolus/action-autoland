@@ -293,16 +293,17 @@ function checkPullRequest(client, pr) {
         var satisfied = true;
         for (const dependency of cmd.dependencies) {
             try {
-                var _satisfied = yield dependency.isSatisfied(client, prInfo.owner, prInfo.repo);
-                if (!_satisfied) {
-                    satisfied = false;
-                    console.log(`Not satisfied with ${JSON.stringify(dependency)}`);
-                    break;
-                }
+                satisfied = yield dependency.isSatisfied(client, prInfo.owner, prInfo.repo);
             }
             catch (e) {
                 console.log("error while checking satisfaction: " + e);
                 satisfied = false;
+            }
+            finally {
+                if (!satisfied) {
+                    console.log(`Not satisfied with ${JSON.stringify(dependency)}`);
+                    break;
+                }
             }
         }
         if (!satisfied) {

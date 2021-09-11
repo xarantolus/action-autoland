@@ -81,19 +81,19 @@ async function checkPullRequest(
 
   for (const dependency of cmd.dependencies) {
     try {
-      var _satisfied = await dependency.isSatisfied(
+      satisfied = await dependency.isSatisfied(
         client,
         prInfo.owner,
         prInfo.repo
       );
-      if (!_satisfied) {
-        satisfied = false;
-        console.log(`Not satisfied with ${JSON.stringify(dependency)}`);
-        break;
-      }
     } catch (e) {
       console.log("error while checking satisfaction: " + e);
       satisfied = false;
+    } finally {
+      if (!satisfied) {
+        console.log(`Not satisfied with ${JSON.stringify(dependency)}`);
+        break;
+      }
     }
   }
 
