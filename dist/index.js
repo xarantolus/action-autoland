@@ -336,7 +336,13 @@ function run() {
                     });
                     console.log(`Checking all ${currentPRs.data.length} PRs for mergeability`);
                     yield Promise.all(currentPRs.data.map((pr) => __awaiter(this, void 0, void 0, function* () {
-                        yield checkPullRequest(client, pr);
+                        try {
+                            yield checkPullRequest(client, pr);
+                        }
+                        catch (e) {
+                            console.log(`Error while checking ${pr.id}: ${e}`);
+                            console.trace();
+                        }
                     })));
                     break;
                 default:

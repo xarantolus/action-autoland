@@ -135,7 +135,12 @@ async function run(): Promise<void> {
         );
         await Promise.all(
           currentPRs.data.map(async (pr) => {
-            await checkPullRequest(client, pr);
+            try {
+              await checkPullRequest(client, pr);
+            } catch (e) {
+              console.log(`Error while checking ${pr.id}: ${e}`);
+              console.trace();
+            }
           })
         );
 
