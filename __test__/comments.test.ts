@@ -1,4 +1,5 @@
-import { Reference, LandAfterCommand } from "../src/comment";
+import { LandAfterCommand } from "../src/comment";
+import { Reference } from "../src/git";
 import { expect, test } from "@jest/globals";
 
 test("ref parsing correctness", () => {

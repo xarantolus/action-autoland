@@ -1,4 +1,4 @@
-import { Reference } from './git';
+import { Reference } from "./git";
 
 export class LandAfterCommand {
   dependencies: Reference[];

@@ -2,12 +2,13 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 667:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Reference = exports.LandAfterCommand = void 0;
+exports.LandAfterCommand = void 0;
+const git_1 = __nccwpck_require__(374);
 class LandAfterCommand {
     constructor(_dependencies) {
         this.dependencies = _dependencies;
@@ -49,10 +50,30 @@ class LandAfterCommand {
             .split(/[,;]/g)
             .map((s) => s.trim())
             .filter((s) => s.length !== 0);
-        return references.map((r) => Reference.parse(r));
+        return references.map((r) => git_1.Reference.parse(r));
     }
 }
 exports.LandAfterCommand = LandAfterCommand;
+
+
+/***/ }),
+
+/***/ 374:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Reference = void 0;
 class Reference {
     constructor(repo, issue, commit, branch) {
         this.repoSlug = repo;
@@ -123,6 +144,57 @@ class Reference {
         }
         return new Reference(repoSlug, issueNumber, commitHash, targetBranch);
     }
+    repoInfo(fallbackOwner, fallbackRepo) {
+        if (this.repoSlug) {
+            var split = this.repoSlug.split("/");
+            if (split.length == 2) {
+                return {
+                    owner: split[0],
+                    repo: split[1],
+                };
+            }
+        }
+        return {
+            owner: fallbackOwner,
+            repo: fallbackRepo,
+        };
+    }
+    isSatisfied(client, fallbackOwner, fallbackRepo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var repo = this.repoInfo(fallbackOwner, fallbackRepo);
+            // If we have an issue number, we check that the issue/pull request referenced by it is closed
+            if (this.issueNumber) {
+                var issue = yield client.rest.issues.get({
+                    issue_number: this.issueNumber,
+                    owner: repo.owner,
+                    repo: repo.repo,
+                });
+                if (issue.status === 200) {
+                    // A closed issue is good
+                    return issue.data.state == "closed";
+                }
+                // A deleted issue also counts as closed, as we can no longer receive updates from it
+                if ([404, 410].includes(issue.status)) {
+                    return true;
+                }
+                // Anything else indicates a problem
+                return false;
+            }
+            if (this.commitHash) {
+                var commitInfo = yield client.rest.repos.compareCommits({
+                    owner: repo.owner,
+                    repo: repo.repo,
+                    base: this.commitHash,
+                    head: this.commitBranch || "HEAD",
+                });
+                console.log(JSON.stringify(commitInfo.data));
+                var isMerged = ["identical", "behind"].includes(commitInfo.data.status);
+                console.log(isMerged);
+                return isMerged;
+            }
+            return false;
+        });
+    }
 }
 exports.Reference = Reference;
 
@@ -184,7 +256,7 @@ function checkPullRequest(client, pullRequestNumber) {
         }
         var comments = yield client.rest.issues.listComments(prInfo);
         // Now get the LAST comment on the PR that contains a command
-        var cmd = null;
+        var cmd;
         comments.data.reverse().find((comment) => {
             try {
                 var _cmd = comment_1.LandAfterCommand.parse(comment.body || comment.body_text || "");
@@ -199,11 +271,29 @@ function checkPullRequest(client, pullRequestNumber) {
                 return false;
             }
         });
-        if (cmd == null) {
+        if (!cmd) {
             console.log("pull request doesn't have a commands associated with it");
             return;
         }
         // Now we can check if the PR command is satisfied
+        var satisfied = true;
+        for (const dependency of cmd.dependencies) {
+            try {
+                if (!dependency.isSatisfied(client, prInfo.owner, prInfo.repo)) {
+                    satisfied = false;
+                    break;
+                }
+            }
+            catch (e) {
+                console.log("error while checking satisfaction: " + e);
+                satisfied = false;
+            }
+        }
+        if (!satisfied) {
+            console.log("pull request is not yet satisfied");
+            return;
+        }
+        console.log("would merge");
     });
 }
 function run() {

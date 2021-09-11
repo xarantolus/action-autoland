@@ -28,7 +28,8 @@ async function checkPullRequest(
   var comments = await client.rest.issues.listComments(prInfo);
 
   // Now get the LAST comment on the PR that contains a command
-  var cmd = null;
+  var cmd: LandAfterCommand | null | undefined;
+
   comments.data.reverse().find((comment) => {
     try {
       var _cmd = LandAfterCommand.parse(
@@ -46,12 +47,33 @@ async function checkPullRequest(
     }
   });
 
-  if (cmd == null) {
+  if (!cmd) {
     console.log("pull request doesn't have a commands associated with it");
     return;
   }
 
   // Now we can check if the PR command is satisfied
+
+  var satisfied = true;
+
+  for (const dependency of cmd.dependencies) {
+    try {
+      if (!dependency.isSatisfied(client, prInfo.owner, prInfo.repo)) {
+        satisfied = false;
+        break;
+      }
+    } catch (e) {
+      console.log("error while checking satisfaction: " + e);
+      satisfied = false;
+    }
+  }
+
+  if (!satisfied) {
+    console.log("pull request is not yet satisfied");
+    return;
+  }
+
+  console.log("would merge");
 }
 
 async function run(): Promise<void> {
