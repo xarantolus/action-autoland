@@ -237,6 +237,99 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const github = __importStar(__nccwpck_require__(438));
 const process_1 = __nccwpck_require__(765);
+const pr_1 = __nccwpck_require__(515);
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const client = github.getOctokit(process_1.env.GITHUB_TOKEN || "");
+            core.debug("event name: " + github.context.eventName);
+            switch (github.context.eventName) {
+                case "pull_request":
+                case "issue_comment":
+                case "pull_request_review":
+                case "pull_request_review_comment":
+                case "check_suite":
+                    // Here we are working on a single pr (github treats them as issues):
+                    var pr = yield client.rest.pulls.get({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        pull_number: github.context.issue.number,
+                    });
+                    yield (0, pr_1.checkPullRequest)(client, pr.data);
+                    break;
+                case "workflow_dispatch":
+                case "schedule":
+                    console.log(`Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`);
+                    // Get all open PRs and check them
+                    var currentPRs = yield client.rest.pulls.list({
+                        owner: github.context.repo.owner,
+                        repo: github.context.repo.repo,
+                        state: "open",
+                        per_page: 100,
+                    });
+                    console.log(`Checking all ${currentPRs.data.length} PRs for mergeability`);
+                    for (const pr of currentPRs.data) {
+                        try {
+                            yield (0, pr_1.checkPullRequest)(client, pr);
+                        }
+                        catch (e) {
+                            console.log(`Error while checking ${pr.number}: ${e}`);
+                            console.trace();
+                        }
+                    }
+                    break;
+                default:
+                    throw new Error("unexpected event name " + github.context.eventName);
+            }
+        }
+        catch (error) {
+            core.setFailed("Error while running action: " + error.message);
+            console.trace();
+        }
+    });
+}
+run();
+
+
+/***/ }),
+
+/***/ 515:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.checkPullRequest = void 0;
+const core = __importStar(__nccwpck_require__(186));
+const github = __importStar(__nccwpck_require__(438));
 const comment_1 = __nccwpck_require__(667);
 // checkPullRequest checks if a PR can be merged and does so if possible
 // - check if that issue should be worked on (check for a comment that indicates so)
@@ -332,57 +425,7 @@ function checkPullRequest(client, pr) {
         });
     });
 }
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const client = github.getOctokit(process_1.env.GITHUB_TOKEN || "");
-            core.debug("event name: " + github.context.eventName);
-            switch (github.context.eventName) {
-                case "pull_request":
-                case "issue_comment":
-                case "pull_request_review":
-                case "pull_request_review_comment":
-                case "check_suite":
-                    // Here we are working on a single pr (github treats them as issues):
-                    var pr = yield client.rest.pulls.get({
-                        owner: github.context.repo.owner,
-                        repo: github.context.repo.repo,
-                        pull_number: github.context.issue.number,
-                    });
-                    yield checkPullRequest(client, pr.data);
-                    break;
-                case "workflow_dispatch":
-                case "schedule":
-                    console.log(`Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`);
-                    // Get all open PRs and check them
-                    var currentPRs = yield client.rest.pulls.list({
-                        owner: github.context.repo.owner,
-                        repo: github.context.repo.repo,
-                        state: "open",
-                        per_page: 100,
-                    });
-                    console.log(`Checking all ${currentPRs.data.length} PRs for mergeability`);
-                    for (const pr of currentPRs.data) {
-                        try {
-                            yield checkPullRequest(client, pr);
-                        }
-                        catch (e) {
-                            console.log(`Error while checking ${pr.number}: ${e}`);
-                            console.trace();
-                        }
-                    }
-                    break;
-                default:
-                    throw new Error("unexpected event name " + github.context.eventName);
-            }
-        }
-        catch (error) {
-            core.setFailed("Error while running action: " + error.message);
-            console.trace();
-        }
-    });
-}
-run();
+exports.checkPullRequest = checkPullRequest;
 
 
 /***/ }),
