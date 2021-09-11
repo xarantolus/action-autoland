@@ -187,6 +187,15 @@ class Reference {
             return false;
         });
     }
+    toString() {
+        if (this.issueNumber) {
+            return `Waiting for PR/Issue ${this.repoSlug || ""}#${this.issueNumber} to be closed (or deleted)`;
+        }
+        if (this.commitHash) {
+            return `Waiting for commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} to be merged into the ${this.commitBranch || "default"} branch`;
+        }
+        return JSON.stringify(this);
+    }
 }
 exports.Reference = Reference;
 
@@ -390,7 +399,9 @@ function checkPullRequest(client, pr) {
                 console.log("pull request doesn't have any commands associated with it");
                 return;
             }
-            console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);
+            console.log(`Command/conditions for merge:\n${cmd.dependencies
+                .map((x) => " -> " + x.toString())
+                .join("\n")}`);
             // Check if all runs/checks for this PR are passed/green
             var checks = yield client.rest.checks.listForRef({
                 owner: github.context.repo.owner,
@@ -402,7 +413,7 @@ function checkPullRequest(client, pr) {
                 return !["neutral", "success", "skipped"].includes(run.conclusion || "");
             });
             if (checksNotOk) {
-                console.log(`Check ${checksNotOk.name} is not OK, it's state is ${checksNotOk.conclusion || "null"}`);
+                console.log(`Check ${checksNotOk.name} is not OK, it's state is ${checksNotOk.conclusion || "not yet available"}`);
                 return;
             }
             // Now we can check if the PR command is satisfied

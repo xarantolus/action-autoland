@@ -93,7 +93,11 @@ export async function checkPullRequest(
         return;
       }
 
-      console.log(`Found command:\n${JSON.stringify(cmd, null, 4)}`);
+      console.log(
+        `Command/conditions for merge:\n${cmd.dependencies
+          .map((x) => " -> " + x.toString())
+          .join("\n")}`
+      );
 
       // Check if all runs/checks for this PR are passed/green
       var checks = await client.rest.checks.listForRef({
@@ -113,7 +117,7 @@ export async function checkPullRequest(
       if (checksNotOk) {
         console.log(
           `Check ${checksNotOk.name} is not OK, it's state is ${
-            checksNotOk.conclusion || "null"
+            checksNotOk.conclusion || "not yet available"
           }`
         );
 
@@ -171,8 +175,7 @@ export async function checkPullRequest(
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         issue_number: pr.number,
-        body:
-          "This pull request was automatically merged because all conditions from the last `autoland after` command were met.",
+        body: "This pull request was automatically merged because all conditions from the last `autoland after` command were met.",
       });
     }
   );

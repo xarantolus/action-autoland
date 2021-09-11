@@ -3,101 +3,161 @@ import { Reference } from "../src/git";
 import { expect, test } from "@jest/globals";
 
 test("ref parse commit", () => {
+  var ref: Reference;
+
   expect(
-    Reference.parse("7057a654720ef532ad11f920e57a33f59890d702 in main")
+    (ref = Reference.parse("7057a654720ef532ad11f920e57a33f59890d702 in main"))
   ).toEqual({
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
     commitBranch: "main",
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the main branch"
+  );
 
   expect(
-    Reference.parse("other/repo#7057a654720ef532ad11f920e57a33f59890d702")
+    (ref = Reference.parse(
+      "other/repo#7057a654720ef532ad11f920e57a33f59890d702"
+    ))
   ).toEqual({
     repoSlug: "other/repo",
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+  );
 
   expect(
-    Reference.parse("other/repo@7057a654720ef532ad11f920e57a33f59890d702")
+    (ref = Reference.parse(
+      "other/repo@7057a654720ef532ad11f920e57a33f59890d702"
+    ))
   ).toEqual({
     repoSlug: "other/repo",
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+  );
 
   expect(
-    Reference.parse(
+    (ref = Reference.parse(
       "other/repo#7057a654720ef532ad11f920e57a33f59890d702 in develop"
-    )
+    ))
   ).toEqual({
     repoSlug: "other/repo",
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
     commitBranch: "develop",
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the develop branch"
+  );
 
   expect(
-    Reference.parse(
+    (ref = Reference.parse(
       "other/repo@7057a654720ef532ad11f920e57a33f59890d702 in develop"
-    )
+    ))
   ).toEqual({
     repoSlug: "other/repo",
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
     commitBranch: "develop",
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit other/repo@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the develop branch"
+  );
 
   expect(
-    Reference.parse(
+    (ref = Reference.parse(
       "https://github.com/xarantolus/action-autoland/commit/7057a654720ef532ad11f920e57a33f59890d702"
-    )
+    ))
   ).toEqual({
     repoSlug: "xarantolus/action-autoland",
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
   });
-
-  expect(Reference.parse("#7057a654720ef532ad11f920e57a33f59890d702")).toEqual({
-    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
-  });
-
-  expect(Reference.parse("@7057a654720ef532ad11f920e57a33f59890d702")).toEqual({
-    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
-  });
-
-  expect(Reference.parse("7057a654720ef532ad11f920e57a33f59890d702")).toEqual({
-    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
-  });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit xarantolus/action-autoland@7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+  );
 
   expect(
-    Reference.parse(
+    (ref = Reference.parse("#7057a654720ef532ad11f920e57a33f59890d702"))
+  ).toEqual({
+    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
+  });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+  );
+
+  expect(
+    (ref = Reference.parse("@7057a654720ef532ad11f920e57a33f59890d702"))
+  ).toEqual({
+    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
+  });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+  );
+
+  expect(
+    (ref = Reference.parse("7057a654720ef532ad11f920e57a33f59890d702"))
+  ).toEqual({
+    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
+  });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit 7057a654720ef532ad11f920e57a33f59890d702 to be merged into the default branch"
+  );
+
+  expect(
+    (ref = Reference.parse(
       "https://github.com/xarantolus/action-autoland/pull/2/commits/8bd5cf32e6094213d80eac4d3176ca9b75b884a7"
-    )
+    ))
   ).toEqual({
     repoSlug: "xarantolus/action-autoland",
     commitHash: "8bd5cf32e6094213d80eac4d3176ca9b75b884a7",
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for commit xarantolus/action-autoland@8bd5cf32e6094213d80eac4d3176ca9b75b884a7 to be merged into the default branch"
+  );
 });
 
 test("ref parse pr/issue", () => {
-  expect(Reference.parse("#15")).toEqual({
+  var ref: Reference;
+
+  expect((ref = Reference.parse("#15"))).toEqual({
     issueNumber: 15,
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for PR/Issue #15 to be closed (or deleted)"
+  );
 
-  expect(Reference.parse("other/repo#15")).toEqual({
+  expect((ref = Reference.parse("other/repo#15"))).toEqual({
     repoSlug: "other/repo",
     issueNumber: 15,
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for PR/Issue other/repo#15 to be closed (or deleted)"
+  );
 
   expect(
-    Reference.parse("https://github.com/xarantolus/test-action-repo/pull/1")
+    (ref = Reference.parse(
+      "https://github.com/xarantolus/test-action-repo/pull/1"
+    ))
   ).toEqual({
     repoSlug: "xarantolus/test-action-repo",
     issueNumber: 1,
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for PR/Issue xarantolus/test-action-repo#1 to be closed (or deleted)"
+  );
 
   expect(
-    Reference.parse("https://github.com/xarantolus/test-action-repo/issues/2")
+    (ref = Reference.parse(
+      "https://github.com/xarantolus/test-action-repo/issues/2"
+    ))
   ).toEqual({
     repoSlug: "xarantolus/test-action-repo",
     issueNumber: 2,
   });
+  expect(ref.toString()).toEqual(
+    "Waiting for PR/Issue xarantolus/test-action-repo#2 to be closed (or deleted)"
+  );
 });
 
 test("throw errors for invalid refs", () => {

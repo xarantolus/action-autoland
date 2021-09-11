@@ -43,7 +43,8 @@ export class Reference {
       return new Reference(undefined, undefined, m[1], m[2]);
     }
 
-    var refRegex = /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issues?))?(?:[\/#@](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
+    var refRegex =
+      /^(?:https?:\/\/github\.com\/)?(\S+\/\S+)?(\/(commit|pull|issues?))?(?:[\/#@](\w+))\s*(?:in\s+([^\/#]+))?$/gi;
 
     var res = refRegex.exec(refText);
     if (res == null) {
@@ -156,5 +157,23 @@ export class Reference {
     }
 
     return false;
+  }
+
+  public toString(): string {
+    if (this.issueNumber) {
+      return `Waiting for PR/Issue ${this.repoSlug || ""}#${
+        this.issueNumber
+      } to be closed (or deleted)`;
+    }
+
+    if (this.commitHash) {
+      return `Waiting for commit ${
+        this.repoSlug ? this.repoSlug + "@" : null || ""
+      }${this.commitHash} to be merged into the ${
+        this.commitBranch || "default"
+      } branch`;
+    }
+
+    return JSON.stringify(this);
   }
 }
