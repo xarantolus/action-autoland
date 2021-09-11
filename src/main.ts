@@ -33,7 +33,9 @@ async function checkPullRequest(
     per_page: 100,
   };
 
-  var comments = await client.rest.issues.listComments(prInfo);
+  var comments = await client.rest.issues.listComments(prInfo).catch((e) => {
+    throw new Error("Listing comments: " + e);
+  });
 
   // Now get the LAST comment on the PR that contains a command
   var cmd: LandAfterCommand | null | undefined;

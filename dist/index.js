@@ -260,7 +260,9 @@ function checkPullRequest(client, pr) {
             issue_number: pr.id,
             per_page: 100,
         };
-        var comments = yield client.rest.issues.listComments(prInfo);
+        var comments = yield client.rest.issues.listComments(prInfo).catch((e) => {
+            throw new Error("Listing comments: " + e);
+        });
         // Now get the LAST comment on the PR that contains a command
         var cmd;
         comments.data.reverse().find((comment) => {
