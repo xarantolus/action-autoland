@@ -29,6 +29,7 @@ export async function checkPullRequest(
     draft?: boolean;
     body: string | null;
     author_association?: string | null;
+    mergeable?: boolean | null;
   }
 ) {
   console.log(
@@ -123,6 +124,26 @@ export async function checkPullRequest(
   var mergeMethod = core.getInput("merge-method", {
     required: true,
   });
+
+  // Check if the PR is mergeable. This attribute can be null because
+  // when listing PRs, we don't get the detailed representation
+  if (pr.mergeable == null || pr.mergeable == undefined) {
+    pr = (
+      await client.rest.pulls.get({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+
+        pull_number: github.context.issue.number,
+      })
+    ).data;
+  }
+
+  if (!pr.mergeable) {
+    console.log(
+      "PR is not yet mergeable. Make sure all status checks are green and that there are no conflicts."
+    );
+    return;
+  }
 
   await client.rest.pulls.merge({
     owner: github.context.repo.owner,
