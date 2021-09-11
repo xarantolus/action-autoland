@@ -1,0 +1,28 @@
+name: Auto-Merge PRs
+
+# These are the events the job needs to lsiten for in order to merge pull requests
+on:
+  # It checks if a single pull request has new criteria for merging (via "autoland after ..." comments)
+  pull_request:
+  issue_comment:
+  pull_request_review:
+  pull_request_review_comment:
+
+  # It also wants to know when pull requests are ready for merging
+  check_suite:
+  
+  # And periodically check if external repositories have merged their PRs that ours depend on
+  schedule:
+    - cron: "30 */2 * * *"
+
+  # You can also run the check manually
+  workflow_dispatch:
+
+jobs:
+  auto-merge:
+    name: Autoland Pull Request Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: xarantolus/action-autoland@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
