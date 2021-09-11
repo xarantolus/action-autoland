@@ -1,6 +1,12 @@
+import { Reference } from './comment'
+var x = Reference.parse("#0.5")
+console.log(x)
+
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { env } from "process";
+
+
 
 async function run(): Promise<void> {
   try {
