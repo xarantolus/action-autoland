@@ -202,4 +202,20 @@ export class Reference {
 
     return JSON.stringify(this);
   }
+
+  public describeNeutral(): string {
+    if (this.issueNumber) {
+      return `PR/Issue ${this.repoSlug || ""}#${this.issueNumber}`;
+    }
+
+    if (this.commitHash) {
+      return `commit ${this.repoSlug ? this.repoSlug + "@" : null || ""}${
+        this.commitHash
+      } going into the ${this.commitBranch || "default"} branch of ${
+        this.repoSlug ? "its" : "this"
+      } repository`;
+    }
+
+    return JSON.stringify(this);
+  }
 }

@@ -98,11 +98,16 @@ export class LandAfterCommand {
         blockingText += " * 🛑 " + ref.describeWaiting() + "\n";
       } else {
         // Status is the error message string
-        errorText += " * ⚠️ " + capitalize(<string>status) + "\n";
+        errorText +=
+          " * ⚠️ " +
+          ref.describeNeutral() +
+          ": " +
+          capitalize(<string>status) +
+          "\n";
       }
     }
 
-    var commentText = "##### Autoland status report\n\n";
+    var commentText = "### Autoland status report\n\n";
     if (successfulText) {
       commentText += "**Done**\n\n" + successfulText + "\n";
     }
@@ -112,6 +117,9 @@ export class LandAfterCommand {
     if (errorText) {
       commentText += "**Errors**\n\n" + errorText + "\n";
     }
+
+    commentText +=
+      "\nEdit or create another autoland command to overwrite the auto merge conditions. If this PR should no longer be auto-merged, remove the autoland command.";
 
     // Add a status comment marker so we can recognize our own comment later, that way we can edit it
     commentText += "\n\n" + STATUS_COMMENT_MARKER;
