@@ -21,7 +21,7 @@ export class LandAfterCommand {
         autoland after other/repo#15, other/repo#16
   */
   public static parse(body: string): LandAfterCommand {
-    const regex = /autoland after (.+)/gi;
+    const regex = /autoland after ([^.!\r\n]*)/gi;
 
     var references: Reference[] = [];
 

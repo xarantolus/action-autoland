@@ -78,6 +78,19 @@ test("ref parse commit", () => {
   );
 
   expect(
+    (ref = Reference.parse(
+      "https://github.com/xarantolus/action-autoland/commit/7057a654720ef532ad11f920e57a33f59890d702 in dev"
+    ))
+  ).toEqual({
+    repoSlug: "xarantolus/action-autoland",
+    commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
+    commitBranch: "dev",
+  });
+  expect(ref.toString()).toEqual(
+    "commit xarantolus/action-autoland@7057a654720ef532ad11f920e57a33f59890d702 must be merged into the dev branch of its repository"
+  );
+
+  expect(
     (ref = Reference.parse("#7057a654720ef532ad11f920e57a33f59890d702"))
   ).toEqual({
     commitHash: "7057a654720ef532ad11f920e57a33f59890d702",
@@ -166,7 +179,7 @@ test("throw errors for invalid refs", () => {
   expect(() => Reference.parse("user/repo")).toThrowError();
 });
 
-test("parse whole comment", () => {
+test("parse simple comment", () => {
   expect(
     LandAfterCommand.parse(`Seems like this PR is blocked by xarantolus/action-autoland#15.
   
@@ -264,6 +277,32 @@ test("parse whole comment", () => {
   expect(
     LandAfterCommand.parse(
       `autoland after 506d44f, #3, xarantolus/action-autoland@fa6a4e7`
+    )
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, undefined, "506d44f"),
+      new Reference(undefined, 3),
+      new Reference("xarantolus/action-autoland", undefined, "fa6a4e7"),
+    ],
+  });
+});
+
+test("parse within sentence in comment", () => {
+  expect(
+    LandAfterCommand.parse(
+      `This PR fixes #7 and should autoland after 506d44f, #3, xarantolus/action-autoland@fa6a4e7. #9 should be worked on after this.`
+    )
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, undefined, "506d44f"),
+      new Reference(undefined, 3),
+      new Reference("xarantolus/action-autoland", undefined, "fa6a4e7"),
+    ],
+  });
+
+  expect(
+    LandAfterCommand.parse(
+      `This PR fixes #7 and should autoland after 506d44f, #3, xarantolus/action-autoland@fa6a4e7! #9 should be worked on after this.`
     )
   ).toEqual({
     dependencies: [
