@@ -139,7 +139,9 @@ export class Reference {
       }
 
       // Anything else indicates a problem
-      return false;
+      throw new Error(
+        "problem while looking up issue/pr: status " + issue.status
+      );
     }
 
     if (this.commitHash) {
@@ -153,10 +155,16 @@ export class Reference {
         return ["identical", "behind"].includes(commitInfo.data.status);
       }
 
-      return false;
+      throw new Error(
+        "problem while looking up commit: status " + commitInfo.status
+      );
     }
 
-    return false;
+    throw new Error(
+      `cannot look up satisfaction for dependency \`${JSON.stringify(
+        this
+      )}\`, it doesn't make sense (no issue number AND no commit hash)`
+    );
   }
 
   public describeWaiting(): string {

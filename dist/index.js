@@ -2,13 +2,24 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 667:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LandAfterCommand = void 0;
+exports.LandAfterCommand = exports.STATUS_COMMENT_MARKER = void 0;
 const git_1 = __nccwpck_require__(374);
+// STATUS_COMMENT_MARKER allows us to recognize status comments that were made by us. They are appended at every comment the bot makes
+exports.STATUS_COMMENT_MARKER = "<!-- PR5s64N80a0m7mXuAYW7t3Nx67d03S8v2yLoodq903WX28fzN72782zKq5p8R0KpxIe0095fzOvhbF142M41spZ69ctg01xh3BDU4tBRa7jFqoG4O7G1aYwu3zKx2wquKan65jq2CPcBRQ3l3R5L0gC081TTdz118pRIr0O3AK097g816y1Ld57QyvY1vv4kRIz7MmMtd0Hq2VFW61PC97rMXNLV08429tqnT7vC8y5V5m57E46RNX1RT705x6rK -->";
 class LandAfterCommand {
     constructor(_dependencies) {
         this.dependencies = _dependencies;
@@ -52,8 +63,68 @@ class LandAfterCommand {
             .filter((s) => s.length !== 0);
         return references.map((r) => git_1.Reference.parse(r));
     }
+    checkSatisfaction(client, fallbackOwner, fallbackRepo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var statuses = new Map();
+            // Request the status for each reference
+            for (const ref of this.dependencies) {
+                try {
+                    statuses.set(ref, yield ref.isSatisfied(client, fallbackOwner, fallbackRepo));
+                }
+                catch (e) {
+                    statuses.set(ref, e.message || e.toString() || "unknown error");
+                }
+            }
+            return new Satisfaction(this.generateCommentText(statuses), statuses);
+        });
+    }
+    generateCommentText(statuses) {
+        var successfulText = "", blockingText = "", errorText = "";
+        // Now we can generate a markdown list for each status
+        for (const [ref, status] of statuses) {
+            if (status === true) {
+                successfulText += " * ✔️ " + ref.describeDone() + "\n";
+            }
+            else if (status === false) {
+                blockingText += " * 🛑 " + ref.describeWaiting() + "\n";
+            }
+            else {
+                // Status is the error message string
+                errorText += " * ⚠️ " + capitalize(status) + "\n";
+            }
+        }
+        var commentText = "##### Autoland status report\n\n";
+        if (successfulText) {
+            commentText += "**Done**\n\n" + successfulText + "\n";
+        }
+        if (blockingText) {
+            commentText += "**Blockers**\n\n" + blockingText + "\n";
+        }
+        if (errorText) {
+            commentText += "**Errors**\n\n" + errorText + "\n";
+        }
+        // Add a status comment marker so we can recognize our own comment later, that way we can edit it
+        commentText += "\n\n" + exports.STATUS_COMMENT_MARKER;
+        return commentText;
+    }
 }
 exports.LandAfterCommand = LandAfterCommand;
+function capitalize(str) {
+    if (!str || str.length <= 0) {
+        return false;
+    }
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+// Satisfaction is a satisfaction summary of multiple statuses of checks/runs.
+// Its statuses map maps a commit/pr reference to its success state (true/false) OR an error message
+class Satisfaction {
+    constructor(text, statuses) {
+        this.commentText = text;
+        this.statuses = statuses;
+        // We are satisfied when all statuses are satisfied, aka all statuses are true (no blockers, no errors)
+        this.satisfied = Array.from(statuses.values()).every((status) => status === true);
+    }
+}
 
 
 /***/ }),
@@ -171,7 +242,7 @@ class Reference {
                     return true;
                 }
                 // Anything else indicates a problem
-                return false;
+                throw new Error("problem while looking up issue/pr: status " + issue.status);
             }
             if (this.commitHash) {
                 var commitInfo = yield client.rest.repos.compareCommitsWithBasehead({
@@ -182,9 +253,9 @@ class Reference {
                 if (commitInfo.status === 200) {
                     return ["identical", "behind"].includes(commitInfo.data.status);
                 }
-                return false;
+                throw new Error("problem while looking up commit: status " + commitInfo.status);
             }
-            return false;
+            throw new Error(`cannot look up satisfaction for dependency \`${JSON.stringify(this)}\`, it doesn't make sense (no issue number AND no commit hash)`);
         });
     }
     describeWaiting() {
@@ -408,6 +479,7 @@ function checkPullRequest(client, pr) {
                 console.log("pull request doesn't have any commands associated with it");
                 return;
             }
+            // TODO: Comment this with issatisfied on the PR or update a comment we have already made
             console.log(`Waiting for the following conditions for merge:\n${cmd.dependencies
                 .map((x) => " -> " + x.describeWaiting())
                 .join("\n")}`);

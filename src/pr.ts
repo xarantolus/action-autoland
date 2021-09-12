@@ -93,6 +93,8 @@ export async function checkPullRequest(
         return;
       }
 
+      // TODO: Comment this with issatisfied on the PR or update a comment we have already made
+
       console.log(
         `Waiting for the following conditions for merge:\n${cmd.dependencies
           .map((x) => " -> " + x.describeWaiting())
