@@ -62,6 +62,7 @@ export class LandAfterCommand {
 
   public async checkSatisfaction(
     client: InstanceType<typeof GitHub>,
+    checkRunsOK: boolean | null,
     fallbackOwner: string,
     fallbackRepo: string
   ): Promise<Satisfaction> {
@@ -79,17 +80,29 @@ export class LandAfterCommand {
       }
     }
 
-    return new Satisfaction(this.generateCommentText(statuses), statuses);
+    return new Satisfaction(
+      this.generateCommentText(statuses, checkRunsOK),
+      statuses
+    );
   }
 
   public generateCommentText(
-    statuses: Map<Reference, boolean | string>
+    statuses: Map<Reference, boolean | string>,
+    checkRunsOK: boolean | null
   ): string {
     var successfulText: string = "",
       blockingText: string = "",
       errorText: string = "";
 
     // Now we can generate a markdown list for each status
+
+    if (checkRunsOK !== null) {
+      if (checkRunsOK) {
+        successfulText += " * ✔️ All checks completed successfully\n";
+      } else {
+        blockingText += " * 🛑 Not all have run successfully\n";
+      }
+    }
 
     for (const [ref, status] of statuses) {
       if (status === true) {

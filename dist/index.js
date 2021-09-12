@@ -64,7 +64,7 @@ class LandAfterCommand {
             .filter((s) => s.length !== 0);
         return references.map((r) => git_1.Reference.parse(r));
     }
-    checkSatisfaction(client, fallbackOwner, fallbackRepo) {
+    checkSatisfaction(client, checkRunsOK, fallbackOwner, fallbackRepo) {
         return __awaiter(this, void 0, void 0, function* () {
             var statuses = new Map();
             // Request the status for each reference
@@ -76,12 +76,20 @@ class LandAfterCommand {
                     statuses.set(ref, e.message || e.toString() || "unknown error");
                 }
             }
-            return new Satisfaction(this.generateCommentText(statuses), statuses);
+            return new Satisfaction(this.generateCommentText(statuses, checkRunsOK), statuses);
         });
     }
-    generateCommentText(statuses) {
+    generateCommentText(statuses, checkRunsOK) {
         var successfulText = "", blockingText = "", errorText = "";
         // Now we can generate a markdown list for each status
+        if (checkRunsOK !== null) {
+            if (checkRunsOK) {
+                successfulText += " * ✔️ All checks completed successfully\n";
+            }
+            else {
+                blockingText += " * 🛑 Not all have run successfully\n";
+            }
+        }
         for (const [ref, status] of statuses) {
             if (status === true) {
                 successfulText += " * ✔️ " + ref.describeDone() + "\n";
@@ -517,8 +525,18 @@ function checkPullRequest(client, pr) {
                 console.log("pull request doesn't have any commands associated with it");
                 return;
             }
+            // Check if all runs/checks for this PR are passed/green
+            var checks = yield client.rest.checks.listForRef({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                ref: pr.head.sha,
+            });
+            var checksNotOk = checks.data.check_runs.find((run) => {
+                // if it isn't neutral, successful or skipped, then we need to wait a bit longer
+                return !["neutral", "success", "skipped"].includes(run.conclusion || "");
+            });
             // Now we check if the conditions/dependencies on other commits/PRs is satisfied
-            var satisfaction = yield cmd.checkSatisfaction(client, prInfo.owner, prInfo.repo);
+            var satisfaction = yield cmd.checkSatisfaction(client, checks.data.total_count === 0 ? null : !checksNotOk, prInfo.owner, prInfo.repo);
             // First of all, we now update or create a status comment
             if (statusComment) {
                 // If we have a status comment, we update it IF THE TEXT CHANGED
@@ -548,18 +566,7 @@ function checkPullRequest(client, pr) {
                 console.log("Merge conditions are not yet satisfied, we are done here");
                 return;
             }
-            // TODO: Add the checks to the status comment (maybe to the satisfaction class)
             // We can merge this PR because all our conditions are met.
-            // Check if all runs/checks for this PR are passed/green
-            var checks = yield client.rest.checks.listForRef({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                ref: pr.head.sha,
-            });
-            var checksNotOk = checks.data.check_runs.find((run) => {
-                // if it isn't neutral, successful or skipped, then we need to wait a bit longer
-                return !["neutral", "success", "skipped"].includes(run.conclusion || "");
-            });
             if (checksNotOk) {
                 console.log(`Check ${checksNotOk.name} is not OK, it's state is ${checksNotOk.conclusion || "not yet available"}`);
                 return;

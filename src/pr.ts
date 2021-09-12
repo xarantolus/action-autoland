@@ -122,9 +122,25 @@ export async function checkPullRequest(
         return;
       }
 
+      // Check if all runs/checks for this PR are passed/green
+      var checks = await client.rest.checks.listForRef({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+
+        ref: pr.head.sha,
+      });
+
+      var checksNotOk = checks.data.check_runs.find((run) => {
+        // if it isn't neutral, successful or skipped, then we need to wait a bit longer
+        return !["neutral", "success", "skipped"].includes(
+          run.conclusion || ""
+        );
+      });
+
       // Now we check if the conditions/dependencies on other commits/PRs is satisfied
       var satisfaction = await cmd.checkSatisfaction(
         client,
+        checks.data.total_count === 0 ? null : !checksNotOk,
         prInfo.owner,
         prInfo.repo
       );
@@ -161,24 +177,8 @@ export async function checkPullRequest(
         return;
       }
 
-      // TODO: Add the checks to the status comment (maybe to the satisfaction class)
-
       // We can merge this PR because all our conditions are met.
 
-      // Check if all runs/checks for this PR are passed/green
-      var checks = await client.rest.checks.listForRef({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-
-        ref: pr.head.sha,
-      });
-
-      var checksNotOk = checks.data.check_runs.find((run) => {
-        // if it isn't neutral, successful or skipped, then we need to wait a bit longer
-        return !["neutral", "success", "skipped"].includes(
-          run.conclusion || ""
-        );
-      });
       if (checksNotOk) {
         console.log(
           `Check ${checksNotOk.name} is not OK, it's state is ${
