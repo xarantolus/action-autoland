@@ -3,7 +3,7 @@ import { GitHub } from "@actions/github/lib/utils";
 
 // STATUS_COMMENT_MARKER allows us to recognize status comments that were made by us. They are appended at every comment the bot makes
 export const STATUS_COMMENT_MARKER =
-  "<!-- PR5s64N80a0m7mXuAYW7t3Nx67d03S8v2yLoodq903WX28fzN72782zKq5p8R0KpxIe0095fzOvhbF142M41spZ69ctg01xh3BDU4tBRa7jFqoG4O7G1aYwu3zKx2wquKan65jq2CPcBRQ3l3R5L0gC081TTdz118pRIr0O3AK097g816y1Ld57QyvY1vv4kRIz7MmMtd0Hq2VFW61PC97rMXNLV08429tqnT7vC8y5V5m57E46RNX1RT705x6rK -->";
+  "<!-- autoland STATUS_COMMENT_MARKER PR5s64N80a0m7mXuAYW7t3Nx67d03S8v2yLoodq903WX28fzN72782zKq5p8R0KpxIe0095fzOvhbF142M41spZ69ctg01xh3BDU4tBRa7jFqoG4O7G1aYwu3zKx2wquKan65jq2CPcBRQ3l3R5L0gC081TTdz118pRIr0O3AK097g816y1Ld57QyvY1vv4kRIz7MmMtd0Hq2VFW61PC97rMXNLV08429tqnT7vC8y5V5m57E46RNX1RT705x6rK -->";
 
 export class LandAfterCommand {
   dependencies: Reference[];

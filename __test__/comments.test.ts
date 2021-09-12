@@ -359,3 +359,13 @@ test("parse within sentence in comment", () => {
     ],
   });
 });
+
+test("our own finishing comment should not be matched", () => {
+  expect(
+    LandAfterCommand.parse(
+      "This pull request was automatically merged because all conditions from the last `autoland after` command were met."
+    )
+  ).toEqual({
+    dependencies: [],
+  });
+});
