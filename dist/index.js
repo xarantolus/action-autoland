@@ -530,6 +530,7 @@ function checkPullRequest(client, pr) {
                 ref: pr.head.sha,
             });
             console.log(JSON.stringify(checks.data.check_runs));
+            console.log(JSON.stringify(github.context));
             // ignore our own run
             var check_runs = checks.data.check_runs.filter((run) => run.name !== github.context.action);
             console.log(JSON.stringify(check_runs));

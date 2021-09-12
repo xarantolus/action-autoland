@@ -131,6 +131,7 @@ export async function checkPullRequest(
       });
 
       console.log(JSON.stringify(checks.data.check_runs));
+      console.log(JSON.stringify(github.context));
 
       // ignore our own run
       var check_runs = checks.data.check_runs.filter(
