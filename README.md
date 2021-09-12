@@ -73,7 +73,7 @@ The following command texts can be used:
 For convenience you can also just use the GitHub URL(s) to the item(s), e.g.
 * `autoland after https://github.com/xarantolus/action-autoland/pull/2`
 * `autoland after https://github.com/xarantolus/test-action-repo/issues/9`
-* `autoland after https://github.com/xarantolus/test-action-repo/issues/9`
+* `autoland after https://github.com/xarantolus/action-autoland/commit/41aba18eacb739635ef58e7aace7988a92a078ec`
 
 You can also add multiple conditions by separating them with a comma:
 * `autoland after #2, other/repo#3, 7057a654720ef532ad11f920e57a33f59890d702, other/repo@7057a654720ef532ad11f920e57a33f59890d702 in develop`
