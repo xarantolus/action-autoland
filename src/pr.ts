@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { GitHub } from "@actions/github/lib/utils";
+import { context, GitHub } from "@actions/github/lib/utils";
 import { LandAfterCommand, STATUS_COMMENT_MARKER } from "./comment";
 
 function authorHasPermission(association: string | null | undefined) {
@@ -130,6 +130,11 @@ export async function checkPullRequest(
         ref: pr.head.sha,
       });
 
+      // ignore our own run
+      checks.data.check_runs = checks.data.check_runs.filter(
+        (run) => run.id !== github.context.runId
+      );
+
       var checksNotOk = checks.data.check_runs.find((run) => {
         // if it isn't neutral, successful or skipped, then we need to wait a bit longer
         return !["neutral", "success", "skipped"].includes(
@@ -140,7 +145,7 @@ export async function checkPullRequest(
       // Now we check if the conditions/dependencies on other commits/PRs is satisfied
       var satisfaction = await cmd.checkSatisfaction(
         client,
-        checks.data.total_count === 0 ? null : !checksNotOk,
+        checks.data.check_runs.length === 0 ? null : !checksNotOk,
         prInfo.owner,
         prInfo.repo
       );
