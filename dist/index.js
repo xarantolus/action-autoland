@@ -38,7 +38,7 @@ class LandAfterCommand {
           autoland after other/repo#15, other/repo#16
     */
     static parse(body) {
-        const regex = /autoland after ([^.!\r\n]*)/gi;
+        const regex = /autoland after ([^\r\n]+?)(?:!|\.+\s|\n|\.+$|$)/gi;
         var references = [];
         let m;
         while ((m = regex.exec(body)) !== null) {
@@ -48,6 +48,7 @@ class LandAfterCommand {
             }
             // The result can be accessed through the `m`-variable.
             this.parseInner(m[1]).forEach((r) => {
+                // Do not keep duplicates
                 if (!references.find((val) => val.equals(r))) {
                     references.push(r);
                 }
@@ -489,7 +490,7 @@ function checkPullRequest(client, pr) {
             var statusComment = comments.data.find((comment) => {
                 var _a;
                 // find the github actions bot user that commented with our marker text
-                return (comment.body || comment.body_text || "").includes(comment_1.STATUS_COMMENT_MARKER) && ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.type) === "Bot";
+                return ((comment.body || comment.body_text || "").includes(comment_1.STATUS_COMMENT_MARKER) && ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.type) === "Bot");
             });
             if (statusComment) {
                 // If we have a status comment, we update it IF THE TEXT CHANGED
@@ -500,7 +501,7 @@ function checkPullRequest(client, pr) {
                         owner: prInfo.owner,
                         repo: prInfo.repo,
                         comment_id: statusComment.id,
-                        body: satisfaction.commentText
+                        body: satisfaction.commentText,
                     });
                 }
             }
@@ -510,14 +511,14 @@ function checkPullRequest(client, pr) {
                     owner: prInfo.owner,
                     repo: prInfo.repo,
                     issue_number: prInfo.issue_number,
-                    body: satisfaction.commentText
+                    body: satisfaction.commentText,
                 });
             }
             if (!satisfaction.satisfied) {
                 console.log("Not satisfied, we are done here");
                 return;
             }
-            // We can merge this PR because all our conditions are met. 
+            // We can merge this PR because all our conditions are met.
             // Check if all runs/checks for this PR are passed/green
             var checks = yield client.rest.checks.listForRef({
                 owner: github.context.repo.owner,

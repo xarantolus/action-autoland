@@ -26,7 +26,7 @@ export class LandAfterCommand {
         autoland after other/repo#15, other/repo#16
   */
   public static parse(body: string): LandAfterCommand {
-    const regex = /autoland after ([^.!\r\n]*)/gi;
+    const regex = /autoland after ([^\r\n]+?)(?:!|\.+\s|\n|\.+$|$)/gi;
 
     var references: Reference[] = [];
 
@@ -40,6 +40,7 @@ export class LandAfterCommand {
 
       // The result can be accessed through the `m`-variable.
       this.parseInner(m[1]).forEach((r) => {
+        // Do not keep duplicates
         if (!references.find((val) => val.equals(r))) {
           references.push(r);
         }
