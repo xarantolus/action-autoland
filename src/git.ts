@@ -159,7 +159,7 @@ export class Reference {
     return false;
   }
 
-  public toString(): string {
+  public describeWaiting(): string {
     if (this.issueNumber) {
       return `PR/Issue ${this.repoSlug || ""}#${
         this.issueNumber
@@ -170,6 +170,24 @@ export class Reference {
       return `commit ${this.repoSlug ? this.repoSlug + "@" : null || ""}${
         this.commitHash
       } must be merged into the ${this.commitBranch || "default"} branch of ${
+        this.repoSlug ? "its" : "this"
+      } repository`;
+    }
+
+    return JSON.stringify(this);
+  }
+
+  public describeDone(): string {
+    if (this.issueNumber) {
+      return `PR/Issue ${this.repoSlug || ""}#${
+        this.issueNumber
+      } has been closed (or deleted)`;
+    }
+
+    if (this.commitHash) {
+      return `commit ${this.repoSlug ? this.repoSlug + "@" : null || ""}${
+        this.commitHash
+      } has been merged into the ${this.commitBranch || "default"} branch of ${
         this.repoSlug ? "its" : "this"
       } repository`;
     }

@@ -187,12 +187,21 @@ class Reference {
             return false;
         });
     }
-    toString() {
+    describeWaiting() {
         if (this.issueNumber) {
             return `PR/Issue ${this.repoSlug || ""}#${this.issueNumber} must be closed (or deleted)`;
         }
         if (this.commitHash) {
             return `commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} must be merged into the ${this.commitBranch || "default"} branch of ${this.repoSlug ? "its" : "this"} repository`;
+        }
+        return JSON.stringify(this);
+    }
+    describeDone() {
+        if (this.issueNumber) {
+            return `PR/Issue ${this.repoSlug || ""}#${this.issueNumber} has been closed (or deleted)`;
+        }
+        if (this.commitHash) {
+            return `commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} has been merged into the ${this.commitBranch || "default"} branch of ${this.repoSlug ? "its" : "this"} repository`;
         }
         return JSON.stringify(this);
     }
@@ -400,7 +409,7 @@ function checkPullRequest(client, pr) {
                 return;
             }
             console.log(`Waiting for the following conditions for merge:\n${cmd.dependencies
-                .map((x) => " -> " + x.toString())
+                .map((x) => " -> " + x.describeWaiting())
                 .join("\n")}`);
             // Check if all runs/checks for this PR are passed/green
             var checks = yield client.rest.checks.listForRef({
