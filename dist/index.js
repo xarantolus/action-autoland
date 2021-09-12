@@ -363,6 +363,7 @@ function run() {
                     yield (0, pr_1.checkPullRequest)(client, pr.data);
                     break;
                 case "workflow_dispatch":
+                case "check_run":
                 case "schedule":
                     console.log(`Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`);
                     // Get all open PRs and check them

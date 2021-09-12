@@ -25,6 +25,8 @@ on:
 
   # It also wants to know when pull requests are ready for merging
   check_suite:
+  check_run:
+    types: [completed]
 
   # Periodically check if external repositories have merged the PRs that ours depend on
   schedule:

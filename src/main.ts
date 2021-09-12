@@ -31,6 +31,7 @@ async function run(): Promise<void> {
 
         break;
       case "workflow_dispatch":
+      case "check_run":
       case "schedule":
         console.log(
           `Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`
