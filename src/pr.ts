@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { GitHub } from "@actions/github/lib/utils";
-import { LandAfterCommand } from "./comment";
+import { LandAfterCommand, STATUS_COMMENT_MARKER } from "./comment";
 
 function authorHasPermission(association: string | null | undefined) {
   if (!association) {
@@ -63,6 +63,11 @@ export async function checkPullRequest(
 
       var parseCommandText = function (text: string) {
         try {
+          // Ignore our own comments
+          if (text.includes(STATUS_COMMENT_MARKER)) {
+            return false;
+          }
+
           var _cmd = LandAfterCommand.parse(text);
           if (_cmd.dependencies.length === 0) {
             return false;
@@ -93,13 +98,53 @@ export async function checkPullRequest(
         return;
       }
 
-      // TODO: Comment this with issatisfied on the PR or update a comment we have already made
-
-      console.log(
-        `Waiting for the following conditions for merge:\n${cmd.dependencies
-          .map((x) => " -> " + x.describeWaiting())
-          .join("\n")}`
+      // Now we check if the conditions/dependencies on other commits/PRs is satisfied
+      var satisfaction = await cmd.checkSatisfaction(
+        client,
+        prInfo.owner,
+        prInfo.repo
       );
+
+      // First of all, we now update or create a status comment
+
+      var statusComment = comments.data.find((comment) => {
+        // find the github actions bot user that commented with our marker text
+        return (
+          (comment.body || comment.body_text || "").includes(
+            STATUS_COMMENT_MARKER
+          ) && comment.user?.type === "Bot"
+        );
+      });
+
+      if (statusComment) {
+        // If we have a status comment, we update it IF THE TEXT CHANGED
+        var commentBody = statusComment.body || statusComment.body_text || "";
+
+        // If a status changed, we update our comment
+        if (commentBody.trim() !== satisfaction.commentText.trim()) {
+          await client.rest.issues.updateComment({
+            owner: prInfo.owner,
+            repo: prInfo.repo,
+            comment_id: statusComment.id,
+            body: satisfaction.commentText,
+          });
+        }
+      } else {
+        // Create the status comment on this PR (as an issue comment)
+        await client.rest.issues.createComment({
+          owner: prInfo.owner,
+          repo: prInfo.repo,
+          issue_number: prInfo.issue_number,
+          body: satisfaction.commentText,
+        });
+      }
+
+      if (!satisfaction.satisfied) {
+        console.log("Not satisfied, we are done here");
+        return;
+      }
+
+      // We can merge this PR because all our conditions are met.
 
       // Check if all runs/checks for this PR are passed/green
       var checks = await client.rest.checks.listForRef({
@@ -115,50 +160,16 @@ export async function checkPullRequest(
           run.conclusion || ""
         );
       });
-
       if (checksNotOk) {
         console.log(
           `Check ${checksNotOk.name} is not OK, it's state is ${
             checksNotOk.conclusion || "not yet available"
           }`
         );
-
         return;
       }
 
-      // Now we can check if the PR command is satisfied
-
-      var satisfied = true;
-
-      for (const dependency of cmd.dependencies) {
-        try {
-          satisfied = await dependency.isSatisfied(
-            client,
-            prInfo.owner,
-            prInfo.repo
-          );
-        } catch (e) {
-          console.log("error while checking satisfaction: " + e);
-          satisfied = false;
-        } finally {
-          if (!satisfied) {
-            console.log(
-              `Not yet satisfied with (at least) ${JSON.stringify(dependency)}`
-            );
-            break;
-          }
-        }
-      }
-
-      if (!satisfied) {
-        console.log("pull request is not yet satisfied");
-        return;
-      }
-
-      console.log(
-        "Dependency conditions are satisfied. Continuing with merge."
-      );
-
+      // Now that we know that everything is OK, we merge the PR
       var mergeMethod = core.getInput("merge-method", {
         required: true,
       });
@@ -173,6 +184,7 @@ export async function checkPullRequest(
         merge_method: <any>mergeMethod,
       });
 
+      // At the end, we create a comment
       await client.rest.issues.createComment({
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,

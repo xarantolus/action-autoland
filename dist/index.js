@@ -19,7 +19,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LandAfterCommand = exports.STATUS_COMMENT_MARKER = void 0;
 const git_1 = __nccwpck_require__(374);
 // STATUS_COMMENT_MARKER allows us to recognize status comments that were made by us. They are appended at every comment the bot makes
-exports.STATUS_COMMENT_MARKER = "<!-- PR5s64N80a0m7mXuAYW7t3Nx67d03S8v2yLoodq903WX28fzN72782zKq5p8R0KpxIe0095fzOvhbF142M41spZ69ctg01xh3BDU4tBRa7jFqoG4O7G1aYwu3zKx2wquKan65jq2CPcBRQ3l3R5L0gC081TTdz118pRIr0O3AK097g816y1Ld57QyvY1vv4kRIz7MmMtd0Hq2VFW61PC97rMXNLV08429tqnT7vC8y5V5m57E46RNX1RT705x6rK -->";
+exports.STATUS_COMMENT_MARKER = "<!-- autoland STATUS_COMMENT_MARKER PR5s64N80a0m7mXuAYW7t3Nx67d03S8v2yLoodq903WX28fzN72782zKq5p8R0KpxIe0095fzOvhbF142M41spZ69ctg01xh3BDU4tBRa7jFqoG4O7G1aYwu3zKx2wquKan65jq2CPcBRQ3l3R5L0gC081TTdz118pRIr0O3AK097g816y1Ld57QyvY1vv4kRIz7MmMtd0Hq2VFW61PC97rMXNLV08429tqnT7vC8y5V5m57E46RNX1RT705x6rK -->";
 class LandAfterCommand {
     constructor(_dependencies) {
         this.dependencies = _dependencies;
@@ -454,6 +454,10 @@ function checkPullRequest(client, pr) {
             var cmd;
             var parseCommandText = function (text) {
                 try {
+                    // Ignore our own comments
+                    if (text.includes(comment_1.STATUS_COMMENT_MARKER)) {
+                        return false;
+                    }
                     var _cmd = comment_1.LandAfterCommand.parse(text);
                     if (_cmd.dependencies.length === 0) {
                         return false;
@@ -479,10 +483,41 @@ function checkPullRequest(client, pr) {
                 console.log("pull request doesn't have any commands associated with it");
                 return;
             }
-            // TODO: Comment this with issatisfied on the PR or update a comment we have already made
-            console.log(`Waiting for the following conditions for merge:\n${cmd.dependencies
-                .map((x) => " -> " + x.describeWaiting())
-                .join("\n")}`);
+            // Now we check if the conditions/dependencies on other commits/PRs is satisfied
+            var satisfaction = yield cmd.checkSatisfaction(client, prInfo.owner, prInfo.repo);
+            // First of all, we now update or create a status comment
+            var statusComment = comments.data.find((comment) => {
+                var _a;
+                // find the github actions bot user that commented with our marker text
+                return (comment.body || comment.body_text || "").includes(comment_1.STATUS_COMMENT_MARKER) && ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.type) === "Bot";
+            });
+            if (statusComment) {
+                // If we have a status comment, we update it IF THE TEXT CHANGED
+                var commentBody = statusComment.body || statusComment.body_text || "";
+                // If a status changed, we update our comment
+                if (commentBody.trim() !== satisfaction.commentText.trim()) {
+                    yield client.rest.issues.updateComment({
+                        owner: prInfo.owner,
+                        repo: prInfo.repo,
+                        comment_id: statusComment.id,
+                        body: satisfaction.commentText
+                    });
+                }
+            }
+            else {
+                // Create the status comment on this PR (as an issue comment)
+                yield client.rest.issues.createComment({
+                    owner: prInfo.owner,
+                    repo: prInfo.repo,
+                    issue_number: prInfo.issue_number,
+                    body: satisfaction.commentText
+                });
+            }
+            if (!satisfaction.satisfied) {
+                console.log("Not satisfied, we are done here");
+                return;
+            }
+            // We can merge this PR because all our conditions are met. 
             // Check if all runs/checks for this PR are passed/green
             var checks = yield client.rest.checks.listForRef({
                 owner: github.context.repo.owner,
@@ -497,28 +532,7 @@ function checkPullRequest(client, pr) {
                 console.log(`Check ${checksNotOk.name} is not OK, it's state is ${checksNotOk.conclusion || "not yet available"}`);
                 return;
             }
-            // Now we can check if the PR command is satisfied
-            var satisfied = true;
-            for (const dependency of cmd.dependencies) {
-                try {
-                    satisfied = yield dependency.isSatisfied(client, prInfo.owner, prInfo.repo);
-                }
-                catch (e) {
-                    console.log("error while checking satisfaction: " + e);
-                    satisfied = false;
-                }
-                finally {
-                    if (!satisfied) {
-                        console.log(`Not yet satisfied with (at least) ${JSON.stringify(dependency)}`);
-                        break;
-                    }
-                }
-            }
-            if (!satisfied) {
-                console.log("pull request is not yet satisfied");
-                return;
-            }
-            console.log("Dependency conditions are satisfied. Continuing with merge.");
+            // Now that we know that everything is OK, we merge the PR
             var mergeMethod = core.getInput("merge-method", {
                 required: true,
             });
@@ -529,6 +543,7 @@ function checkPullRequest(client, pr) {
                 // cast to any, then typescript doesn't complain about assignability
                 merge_method: mergeMethod,
             });
+            // At the end, we create a comment
             yield client.rest.issues.createComment({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
