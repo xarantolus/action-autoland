@@ -91,10 +91,10 @@ class LandAfterCommand {
             }
             else {
                 // Status is the error message string
-                errorText += " * ⚠️ " + capitalize(status) + "\n";
+                errorText += " * ⚠️ " + ref.describeNeutral() + ": " + capitalize(status) + "\n";
             }
         }
-        var commentText = "##### Autoland status report\n\n";
+        var commentText = "### Autoland status report\n\n";
         if (successfulText) {
             commentText += "**Done**\n\n" + successfulText + "\n";
         }
@@ -104,6 +104,7 @@ class LandAfterCommand {
         if (errorText) {
             commentText += "**Errors**\n\n" + errorText + "\n";
         }
+        commentText += "\nEdit or create another autoland command to overwrite the auto merge conditions. If this PR should no longer be auto-merged, remove the autoland command.";
         // Add a status comment marker so we can recognize our own comment later, that way we can edit it
         commentText += "\n\n" + exports.STATUS_COMMENT_MARKER;
         return commentText;
@@ -274,6 +275,15 @@ class Reference {
         }
         if (this.commitHash) {
             return `commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} has been merged into the ${this.commitBranch || "default"} branch of ${this.repoSlug ? "its" : "this"} repository`;
+        }
+        return JSON.stringify(this);
+    }
+    describeNeutral() {
+        if (this.issueNumber) {
+            return `PR/Issue ${this.repoSlug || ""}#${this.issueNumber}`;
+        }
+        if (this.commitHash) {
+            return `commit ${this.repoSlug ? this.repoSlug + "@" :  false || ""}${this.commitHash} going into the ${this.commitBranch || "default"} branch of ${this.repoSlug ? "its" : "this"} repository`;
         }
         return JSON.stringify(this);
     }
