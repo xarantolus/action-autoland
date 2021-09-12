@@ -130,20 +130,15 @@ export async function checkPullRequest(
         ref: pr.head.sha,
       });
 
-      console.log(JSON.stringify(checks.data.check_runs));
-      console.log(JSON.stringify(github.context));
-
       // ignore our own run
       var check_runs = checks.data.check_runs.filter(
         (run) => run.name !== github.context.action
       );
 
-      console.log(JSON.stringify(check_runs));
-
       var checksNotOk = check_runs.find((run) => {
         // if it isn't neutral, successful or skipped, then we need to wait a bit longer
         return !["neutral", "success", "skipped"].includes(
-          run.conclusion || ""
+          (run.conclusion || "").toLowerCase()
         );
       });
 
