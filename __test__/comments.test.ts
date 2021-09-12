@@ -358,6 +358,59 @@ test("parse within sentence in comment", () => {
       new Reference("xarantolus/action-autoland", undefined, "fa6a4e7"),
     ],
   });
+
+  expect(
+    LandAfterCommand.parse(
+      `This PR fixes #7 and should autoland after 506d44f, #3, xarantolus/action-autoland@fa6a4e7! #9 should be worked on after this.`
+    )
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, undefined, "506d44f"),
+      new Reference(undefined, 3),
+      new Reference("xarantolus/action-autoland", undefined, "fa6a4e7"),
+    ],
+  });
+});
+
+test("ignore duplicate dependencies", () => {
+  expect(
+    LandAfterCommand.parse(
+      `autoland after #15, #15, #15, https://github.com/xarantolus/action-autoland/commit/68fd624844c85a1aedeb1b8959b04c53d3dc624d, xarantolus/action-autoland@68fd624844c85a1aedeb1b8959b04c53d3dc624d, xarantolus/action-autoland#68fd624844c85a1aedeb1b8959b04c53d3dc624d`
+    )
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, 15),
+      new Reference(
+        "xarantolus/action-autoland",
+        undefined,
+        "68fd624844c85a1aedeb1b8959b04c53d3dc624d"
+      ),
+    ],
+  });
+});
+
+test("parse with URLs", () => {
+  expect(
+    LandAfterCommand.parse(
+      `  autoland after #15, #18, https://github.com/xarantolus/action-autoland/pull/6, https://github.com/xarantolus/action-autoland/commit/68fd624844c85a1aedeb1b8959b04c53d3dc624d, https://github.com/xarantolus/action-autoland/commit/68fd624844c85a1aedeb1b8959b04c13d3dc624d...`
+    )
+  ).toEqual({
+    dependencies: [
+      new Reference(undefined, 15),
+      new Reference(undefined, 18),
+      new Reference("xarantolus/action-autoland", 6),
+      new Reference(
+        "xarantolus/action-autoland",
+        undefined,
+        "68fd624844c85a1aedeb1b8959b04c53d3dc624d"
+      ),
+      new Reference(
+        "xarantolus/action-autoland",
+        undefined,
+        "68fd624844c85a1aedeb1b8959b04c13d3dc624d"
+      ),
+    ],
+  });
 });
 
 test("our own finishing comment should not be matched", () => {
