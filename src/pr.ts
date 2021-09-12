@@ -91,7 +91,31 @@ export async function checkPullRequest(
         return false;
       });
 
+      // Search the status comment.
+      var statusComment = comments.data.find((comment) => {
+        // find the github actions bot user that commented with our marker text
+        return (
+          (comment.body || comment.body_text || "").includes(
+            STATUS_COMMENT_MARKER
+          ) && comment.user?.type === "Bot"
+        );
+      });
+
+      // We delete the status comment if the autoland command is no longer there.
+      // This allows users to update their comments to remove the autoland condition
       if (!cmd) {
+        if (statusComment) {
+          await client.rest.issues.deleteComment({
+            owner: prInfo.owner,
+            repo: prInfo.repo,
+            comment_id: statusComment.id,
+          });
+          console.log(
+            "deleted status comment as the command is no longer pressent"
+          );
+          return;
+        }
+
         console.log(
           "pull request doesn't have any commands associated with it"
         );
@@ -107,15 +131,6 @@ export async function checkPullRequest(
 
       // First of all, we now update or create a status comment
 
-      var statusComment = comments.data.find((comment) => {
-        // find the github actions bot user that commented with our marker text
-        return (
-          (comment.body || comment.body_text || "").includes(
-            STATUS_COMMENT_MARKER
-          ) && comment.user?.type === "Bot"
-        );
-      });
-
       if (statusComment) {
         // If we have a status comment, we update it IF THE TEXT CHANGED
         var commentBody = statusComment.body || statusComment.body_text || "";
@@ -128,6 +143,7 @@ export async function checkPullRequest(
             comment_id: statusComment.id,
             body: satisfaction.commentText,
           });
+          console.log("Updated our status comment with new status");
         }
       } else {
         // Create the status comment on this PR (as an issue comment)
@@ -137,12 +153,15 @@ export async function checkPullRequest(
           issue_number: prInfo.issue_number,
           body: satisfaction.commentText,
         });
+        console.log("Created our status comment");
       }
 
       if (!satisfaction.satisfied) {
-        console.log("Not satisfied, we are done here");
+        console.log("Merge conditions are not yet satisfied, we are done here");
         return;
       }
+
+      // TODO: Add the checks to the status comment (maybe to the satisfaction class)
 
       // We can merge this PR because all our conditions are met.
 

@@ -91,7 +91,12 @@ class LandAfterCommand {
             }
             else {
                 // Status is the error message string
-                errorText += " * ⚠️ " + ref.describeNeutral() + ": " + capitalize(status) + "\n";
+                errorText +=
+                    " * ⚠️ " +
+                        ref.describeNeutral() +
+                        ": " +
+                        capitalize(status) +
+                        "\n";
             }
         }
         var commentText = "### Autoland status report\n\n";
@@ -104,7 +109,8 @@ class LandAfterCommand {
         if (errorText) {
             commentText += "**Errors**\n\n" + errorText + "\n";
         }
-        commentText += "\nEdit or create another autoland command to overwrite the auto merge conditions. If this PR should no longer be auto-merged, remove the autoland command.";
+        commentText +=
+            "\nEdit or create another autoland command to overwrite the auto merge conditions. If this PR should no longer be auto-merged, remove the autoland command.";
         // Add a status comment marker so we can recognize our own comment later, that way we can edit it
         commentText += "\n\n" + exports.STATUS_COMMENT_MARKER;
         return commentText;
@@ -490,18 +496,30 @@ function checkPullRequest(client, pr) {
                 }
                 return false;
             });
+            // Search the status comment.
+            var statusComment = comments.data.find((comment) => {
+                var _a;
+                // find the github actions bot user that commented with our marker text
+                return ((comment.body || comment.body_text || "").includes(comment_1.STATUS_COMMENT_MARKER) && ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.type) === "Bot");
+            });
+            // We delete the status comment if the autoland command is no longer there.
+            // This allows users to update their comments to remove the autoland condition
             if (!cmd) {
+                if (statusComment) {
+                    yield client.rest.issues.deleteComment({
+                        owner: prInfo.owner,
+                        repo: prInfo.repo,
+                        comment_id: statusComment.id,
+                    });
+                    console.log("deleted status comment as the command is no longer pressent");
+                    return;
+                }
                 console.log("pull request doesn't have any commands associated with it");
                 return;
             }
             // Now we check if the conditions/dependencies on other commits/PRs is satisfied
             var satisfaction = yield cmd.checkSatisfaction(client, prInfo.owner, prInfo.repo);
             // First of all, we now update or create a status comment
-            var statusComment = comments.data.find((comment) => {
-                var _a;
-                // find the github actions bot user that commented with our marker text
-                return ((comment.body || comment.body_text || "").includes(comment_1.STATUS_COMMENT_MARKER) && ((_a = comment.user) === null || _a === void 0 ? void 0 : _a.type) === "Bot");
-            });
             if (statusComment) {
                 // If we have a status comment, we update it IF THE TEXT CHANGED
                 var commentBody = statusComment.body || statusComment.body_text || "";
@@ -513,6 +531,7 @@ function checkPullRequest(client, pr) {
                         comment_id: statusComment.id,
                         body: satisfaction.commentText,
                     });
+                    console.log("Updated our status comment with new status");
                 }
             }
             else {
@@ -523,11 +542,13 @@ function checkPullRequest(client, pr) {
                     issue_number: prInfo.issue_number,
                     body: satisfaction.commentText,
                 });
+                console.log("Created our status comment");
             }
             if (!satisfaction.satisfied) {
-                console.log("Not satisfied, we are done here");
+                console.log("Merge conditions are not yet satisfied, we are done here");
                 return;
             }
+            // TODO: Add the checks to the status comment (maybe to the satisfaction class)
             // We can merge this PR because all our conditions are met.
             // Check if all runs/checks for this PR are passed/green
             var checks = yield client.rest.checks.listForRef({
