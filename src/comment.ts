@@ -124,11 +124,9 @@ export class LandAfterCommand {
     if (successfulText) {
       commentText += "**Done**\n\n" + successfulText + "\n";
     }
-    if (blockingText) {
-      commentText += "**Blockers**\n\n" + blockingText + "\n";
-    }
-    if (errorText) {
-      commentText += "**Errors**\n\n" + errorText + "\n";
+    // Put blockers and error text in the same list, as both are blocking
+    if (blockingText || errorText) {
+      commentText += "**Blockers**\n\n" + blockingText + errorText + "\n";
     }
 
     commentText +=

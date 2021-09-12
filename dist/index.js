@@ -111,11 +111,9 @@ class LandAfterCommand {
         if (successfulText) {
             commentText += "**Done**\n\n" + successfulText + "\n";
         }
-        if (blockingText) {
-            commentText += "**Blockers**\n\n" + blockingText + "\n";
-        }
-        if (errorText) {
-            commentText += "**Errors**\n\n" + errorText + "\n";
+        // Put blockers and error text in the same list, as both are blocking
+        if (blockingText || errorText) {
+            commentText += "**Blockers**\n\n" + blockingText + errorText + "\n";
         }
         commentText +=
             "\nEdit or create another autoland command to overwrite the auto merge conditions. If this PR should no longer be auto-merged, remove the autoland command.";
