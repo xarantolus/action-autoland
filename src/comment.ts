@@ -130,10 +130,12 @@ export class LandAfterCommand {
     }
 
     commentText +=
-      "\nEdit or create another autoland command to overwrite the auto merge conditions. If this PR should no longer be auto-merged, remove the autoland command.";
+      "\nYou can overwrite all auto merge conditions by editing the command text or creating a new comment.\n";
+
+    commentText += `<div align="right"><sub>If you notice any problems, you can <a href="https://github.com/xarantolus/action-autoland">report an issue</a>.</sub></div>\n`;
 
     // Add a status comment marker so we can recognize our own comment later, that way we can edit it
-    commentText += "\n\n" + STATUS_COMMENT_MARKER;
+    commentText += STATUS_COMMENT_MARKER;
 
     return commentText;
   }
