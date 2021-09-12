@@ -130,12 +130,16 @@ export async function checkPullRequest(
         ref: pr.head.sha,
       });
 
+      console.log(JSON.stringify(checks.data.check_runs));
+
       // ignore our own run
-      checks.data.check_runs = checks.data.check_runs.filter(
-        (run) => run.id !== github.context.runId
+      var check_runs = checks.data.check_runs.filter(
+        (run) => run.name !== github.context.action
       );
 
-      var checksNotOk = checks.data.check_runs.find((run) => {
+      console.log(JSON.stringify(check_runs));
+
+      var checksNotOk = check_runs.find((run) => {
         // if it isn't neutral, successful or skipped, then we need to wait a bit longer
         return !["neutral", "success", "skipped"].includes(
           run.conclusion || ""
@@ -145,7 +149,7 @@ export async function checkPullRequest(
       // Now we check if the conditions/dependencies on other commits/PRs is satisfied
       var satisfaction = await cmd.checkSatisfaction(
         client,
-        checks.data.check_runs.length === 0 ? null : !checksNotOk,
+        check_runs.length === 0 ? null : !checksNotOk,
         prInfo.owner,
         prInfo.repo
       );

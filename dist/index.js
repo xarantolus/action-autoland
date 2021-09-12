@@ -529,14 +529,16 @@ function checkPullRequest(client, pr) {
                 repo: github.context.repo.repo,
                 ref: pr.head.sha,
             });
+            console.log(JSON.stringify(checks.data.check_runs));
             // ignore our own run
-            checks.data.check_runs = checks.data.check_runs.filter((run) => run.id !== github.context.runId);
-            var checksNotOk = checks.data.check_runs.find((run) => {
+            var check_runs = checks.data.check_runs.filter((run) => run.name !== github.context.action);
+            console.log(JSON.stringify(check_runs));
+            var checksNotOk = check_runs.find((run) => {
                 // if it isn't neutral, successful or skipped, then we need to wait a bit longer
                 return !["neutral", "success", "skipped"].includes(run.conclusion || "");
             });
             // Now we check if the conditions/dependencies on other commits/PRs is satisfied
-            var satisfaction = yield cmd.checkSatisfaction(client, checks.data.check_runs.length === 0 ? null : !checksNotOk, prInfo.owner, prInfo.repo);
+            var satisfaction = yield cmd.checkSatisfaction(client, check_runs.length === 0 ? null : !checksNotOk, prInfo.owner, prInfo.repo);
             // First of all, we now update or create a status comment
             if (statusComment) {
                 // If we have a status comment, we update it IF THE TEXT CHANGED
