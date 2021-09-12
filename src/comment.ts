@@ -100,7 +100,7 @@ export class LandAfterCommand {
       if (checkRunsOK) {
         successfulText += " * ✔️ All checks completed successfully\n";
       } else {
-        blockingText += " * 🛑 Not all have run successfully\n";
+        blockingText += " * 🛑 Not all checks have run successfully\n";
       }
     }
 
