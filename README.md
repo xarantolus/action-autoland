@@ -4,8 +4,10 @@ autoland is a Github Action that allows you to automatically merge pull requests
 ### How it works:
 1. You or someone else creates a pull request on your own repository
 2. Include the text `autoland after other/repo#12` in the pull request text or just add it as a comment
-3. The bot will comment a status report on your PR to show you which conditions are met and which it is waiting for
+3. The bot will comment a status report on your PR to show you which conditions are met and which ones are blocking the merge
 4. Some time after the referenced pull request is merged, autoland will merge your PR if all other status checks are successful (or were skipped/neutral)
+
+This also works for commits, they will be merged as soon as they are in the specified branch (defaults to the default branch of the repository).
 
 ### Setup & Configuration
 **WARNING**: This is not yet ready for general use, except if you want to test. Adding this action to your repository could allow an attacker to merge their own PR, which is a security risk.

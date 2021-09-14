@@ -52,6 +52,7 @@ export async function checkPullRequest(
         per_page: 100,
       };
 
+      // TODO: List all comments
       var comments = await client.rest.issues
         .listComments(prInfo)
         .catch((e) => {
@@ -122,6 +123,7 @@ export async function checkPullRequest(
         return;
       }
 
+      // TODO: List all checks
       // Check if all runs/checks for this PR are passed/green
       var checks = await client.rest.checks.listForRef({
         owner: github.context.repo.owner,

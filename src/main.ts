@@ -37,6 +37,7 @@ async function run(): Promise<void> {
           `Requesting 100 open pull requests from ${github.context.repo.owner}/${github.context.repo.repo}`
         );
 
+        // TODO: List all pulls
         // Get all open PRs and check them
         var currentPRs = await client.rest.pulls.list({
           owner: github.context.repo.owner,
