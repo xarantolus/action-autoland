@@ -43,10 +43,10 @@ jobs:
       - uses: xarantolus/action-autoland@main
         with:
           # How PRs should be merged
-          #   Allowed values 'merge', 'squash' or 'rebase'
+          #   Allowed values are 'merge', 'squash' or 'rebase'
           #   See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/about-merge-methods-on-github
           merge-method: merge 
-          # Which user types are allowed to comment "autoland after" comments (other users are ignored)
+          # Which user types are allowed to comment "autoland after" comments (other users are ignored), separated by comma
           #   See https://docs.github.com/en/graphql/reference/enums#commentauthorassociation
           users: owner, collaborator, member
         env:

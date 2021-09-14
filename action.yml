@@ -1,5 +1,5 @@
-name: 'Autoland'
-description: 'Automatically merge PRs when another repository merges a PR or commit'
+name: 'Autoland Pull Request'
+description: 'Merge PRs automatically when their depending commits or PRs have been merged into other repositories'
 author: 'xarantolus'
 
 inputs:
