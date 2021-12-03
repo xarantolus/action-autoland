@@ -1,6 +1,6 @@
 {
   "name": "autoland-gh-action",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Merge PRs automatically when their depending commits or PRs have been merged into other repositories",
   "main": "lib/main.js",
